@@ -419,9 +419,20 @@ document.addEventListener('DOMContentLoaded', () => {
     show('install-ios-hint');
   }
 
-  // Service Worker
+  // Service Worker – auto-reload when a new version activates
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(console.warn);
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        reg.installing?.addEventListener('statechange', e => {
+          if (e.target.state === 'activated') window.location.reload();
+        });
+      });
+    }).catch(console.warn);
+
+    // Also catches the case where skipWaiting fired before we registered the listener
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   }
 
   showStart();
