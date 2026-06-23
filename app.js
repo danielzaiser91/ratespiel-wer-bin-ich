@@ -288,6 +288,18 @@ async function requestSensor() {
   }
 }
 
+// ── PWA Install ────────────────────────────────────────────────────────────
+let _deferredInstall = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall = e;
+  // Only show if not already installed
+  if (!window.matchMedia('(display-mode: standalone)').matches) {
+    show('install-overlay');
+  }
+});
+
 // ── Init ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Language buttons
@@ -378,6 +390,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // iOS sensor check
   if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
     show('sensor-area');
+  }
+
+  // PWA install buttons
+  $('btn-install-app').addEventListener('click', async () => {
+    if (_deferredInstall) {
+      // Android/Chrome: trigger native install prompt
+      _deferredInstall.prompt();
+      const { outcome } = await _deferredInstall.userChoice;
+      _deferredInstall = null;
+    }
+    hide('install-overlay');
+  });
+
+  $('btn-install-skip').addEventListener('click', () => {
+    hide('install-overlay');
+  });
+
+  // iOS: show manual instructions instead of install button
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isIOS && !isStandalone) {
+    show('install-overlay');
+    hide('btn-install-app');
+    show('install-ios-hint');
   }
 
   // Service Worker

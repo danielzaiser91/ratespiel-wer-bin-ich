@@ -14,6 +14,22 @@
 </head>
 <body>
 
+<!-- PWA Install overlay -->
+<div id="install-overlay" class="install-overlay hidden">
+  <div class="install-box">
+    <div class="install-icon">❓</div>
+    <h2 id="install-title">App installieren?</h2>
+    <p id="install-desc">Für das beste Erlebnis als App installieren – funktioniert offline und startet im Vollbild.</p>
+    <div id="install-ios-hint" class="install-ios-hint hidden">
+      Tippe unten auf <strong>Teilen</strong> und dann auf <strong>„Zum Home-Bildschirm"</strong>.
+    </div>
+    <div class="install-btns">
+      <button id="btn-install-app" class="btn-primary">Als App installieren</button>
+      <button id="btn-install-skip" class="btn-secondary">Im Browser öffnen</button>
+    </div>
+  </div>
+</div>
+
 <!-- Rotate hint overlay -->
 <div id="rotate-hint" class="rotate-hint">
   <div class="rotate-icon">⟳</div>
