@@ -260,13 +260,14 @@ function listenTilt() {
     if (S.advancing || tiltCooldown || S.neutralBeta === null) return;
     let delta = e.beta - S.neutralBeta;
     if (S.tiltInvert) delta = -delta;
-    if (delta < -25) {
+    // Phone held against forehead screen-away: forward tilt increases beta
+    if (delta > 25) {
       tiltCooldown = true;
-      setTimeout(() => { tiltCooldown = false; }, 1500);
+      setTimeout(() => { tiltCooldown = false; }, 300);
       triggerCorrect();
-    } else if (delta > 25) {
+    } else if (delta < -25) {
       tiltCooldown = true;
-      setTimeout(() => { tiltCooldown = false; }, 1500);
+      setTimeout(() => { tiltCooldown = false; }, 300);
       triggerWrong();
     }
   };
