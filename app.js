@@ -148,7 +148,9 @@ async function showCard() {
 
   if (S.mode === 'image') {
     $('card-word').textContent = t('loading');
-    const img = await fetchWikiImage(word);
+    const cat = CATEGORIES.find(c => c.id === S.category);
+    const searchTerm = word + (cat?.imageSearchSuffix?.[S.lang] || '');
+    const img = await fetchWikiImage(searchTerm);
     if (img) {
       $('card-image').src = img;
       $('card-image').classList.remove('hidden');

@@ -10,6 +10,7 @@ const CATEGORIES = [
   {
     id: 'jobs',
     onlyDE: false,
+    imageSearchSuffix: { de: ' Beruf', en: ' profession' },
     words: {
       de: ['Arzt','Lehrer','Polizist','Feuerwehrmann','Koch','Bäcker','Ingenieur','Architekt','Anwalt','Richter','Pilot','Astronaut','Krankenschwester','Zahnarzt','Tierarzt','Apotheker','Buchhalter','Manager','Programmierer','Designer','Journalist','Fotograf','Schauspieler','Musiker','Maler','Bildhauer','Schriftsteller','Bibliothekar','Bibliothekar','Elektriker','Klempner','Schreiner','Maurer','Gärtner','Bauer','Fischer','Jäger','Soldat','Kellner','Busfahrer','Taxifahrer','LKW-Fahrer','Postbote','Müllmann','Friseur','Kosmetikerin','Masseur','Physiotherapeut','Psychologe','Sozialpädag'],
       en: ['Doctor','Teacher','Police Officer','Firefighter','Cook','Baker','Engineer','Architect','Lawyer','Judge','Pilot','Astronaut','Nurse','Dentist','Vet','Pharmacist','Accountant','Manager','Programmer','Designer','Journalist','Photographer','Actor','Musician','Painter','Sculptor','Writer','Librarian','Electrician','Plumber','Carpenter','Bricklayer','Gardener','Farmer','Fisherman','Hunter','Soldier','Waiter','Bus Driver','Taxi Driver','Truck Driver','Postman','Garbage Collector','Hairdresser','Beautician','Masseur','Physiotherapist','Psychologist','Social Worker','Scientist']

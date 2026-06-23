@@ -18,6 +18,7 @@ Nie vergessen. Keine Ausnahme.
 | v1.1        | v6         | 2026-06-23 | Kalibrierungs-UI redesign           |
 | v1.2        | v7         | 2026-06-23 | Tiltrichtung korrigiert, Cooldown 300ms |
 | v1.3        | v8         | 2026-06-23 | Kalibrierung als geführter 3-Schritt-Wizard, Tilt-Hint entfernt |
+| v1.4        | v9         | 2026-06-23 | Berufe-Bild-Suche mit imageSearchSuffix " Beruf" disambiguiert |
 
 ## Projekt-Übersicht
 
