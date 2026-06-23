@@ -72,7 +72,14 @@
         <button class="mode-btn active" data-mode="word" data-i18n="modeWord">Wort</button>
         <button class="mode-btn" data-mode="image" data-i18n="modeImage">Bild</button>
       </div>
-      <button id="btn-open-calib" class="btn-calib" data-i18n="calibBtn">⊙ Kippen kalibrieren</button>
+      <div class="calib-teaser">
+        <div class="calib-teaser-icon">📱</div>
+        <div class="calib-teaser-text">
+          <strong data-i18n="calibTeaserTitle">Kipperkennung kalibrieren</strong>
+          <span data-i18n="calibTeaserDesc">Damit Richtig &amp; Falsch zuverlässig erkannt werden</span>
+        </div>
+        <button id="btn-open-calib" class="calib-teaser-btn" data-i18n="calibTeaserBtn">Kalibrieren</button>
+      </div>
 
       <!-- iOS sensor -->
       <div id="sensor-area" class="hidden sensor-area">

@@ -132,18 +132,56 @@ html, body {
 .calib-btns { display: flex; flex-direction: column; gap: 10px; }
 .calib-btns .btn-primary, .calib-btns .btn-secondary { text-align: center; }
 
-.btn-calib {
-  background: transparent;
-  border: 1px dashed var(--text2);
+.calib-teaser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg2);
+  border: 2px solid var(--accent);
   border-radius: var(--radius);
-  color: var(--text2);
-  font-size: var(--fs-sm);
-  padding: 7px 14px;
+  padding: 10px 14px;
+  width: 100%;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-  align-self: flex-start;
 }
-.btn-calib:hover, .btn-calib:active { border-color: var(--accent); color: var(--accent); }
+
+.calib-teaser-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.calib-teaser-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.calib-teaser-text strong {
+  font-size: var(--fs-sm);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.calib-teaser-text span {
+  font-size: 0.7rem;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.calib-teaser-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.calib-teaser-btn:active { opacity: 0.8; }
 
 /* ── Rotate Hint ─────────────────────────────────────────────────────────── */
 .rotate-hint {
