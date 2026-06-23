@@ -12,7 +12,7 @@ const S = {
   startTime: 0,
   timer: null,
   timeLeft: 0,
-  tiltLocked: false,
+  advancing: false,   // blocks double-trigger during card transition
   neutralBeta: null,
   currentImage: null,
 };
@@ -127,8 +127,9 @@ async function startGame() {
   S.deck = shuffle(getWords(S.category, S.lang));
   S.index = 0; S.correct = 0; S.wrong = 0;
   S.startTime = Date.now();
-  S.tiltLocked = false; S.neutralBeta = null;
+  S.advancing = false; S.neutralBeta = null;
   hideAll(); show('screen-game');
+  hide('timer-display');
   renderAll();
   updateProgress();
   if (S.roundMode === 'time') startTimer();
@@ -175,21 +176,21 @@ function updateProgress() {
 }
 
 function triggerCorrect() {
-  if (S.tiltLocked) return;
-  S.tiltLocked = true;
+  if (S.advancing) return;
+  S.advancing = true;
   S.correct++;
   navigator.vibrate?.(100);
-  soundCorrect();
+  try { soundCorrect(); } catch(e) {}
   flashOverlay('flash-correct');
   advance();
 }
 
 function triggerWrong() {
-  if (S.tiltLocked) return;
-  S.tiltLocked = true;
+  if (S.advancing) return;
+  S.advancing = true;
   S.wrong++;
   navigator.vibrate?.([80, 40, 80]);
-  soundWrong();
+  try { soundWrong(); } catch(e) {}
   flashOverlay('flash-wrong');
   advance();
 }
@@ -205,7 +206,7 @@ async function advance() {
   if (S.roundMode === 'cards' && S.index >= S.roundValue) { endGame(); return; }
   if (S.index >= S.deck.length) { endGame(); return; }
   await showCard();
-  setTimeout(() => { S.tiltLocked = false; }, 1000);
+  S.advancing = false;
 }
 
 // ── Timer ──────────────────────────────────────────────────────────────────
@@ -252,11 +253,19 @@ function calibrateTilt() {
 }
 
 function listenTilt() {
+  let tiltCooldown = false;
   _orientHandler = e => {
-    if (S.tiltLocked || S.neutralBeta === null) return;
+    if (S.advancing || tiltCooldown || S.neutralBeta === null) return;
     const delta = e.beta - S.neutralBeta;
-    if (delta < -25) triggerCorrect();
-    else if (delta > 25) triggerWrong();
+    if (delta < -25) {
+      tiltCooldown = true;
+      setTimeout(() => { tiltCooldown = false; }, 1500);
+      triggerCorrect();
+    } else if (delta > 25) {
+      tiltCooldown = true;
+      setTimeout(() => { tiltCooldown = false; }, 1500);
+      triggerWrong();
+    }
   };
   window.addEventListener('deviceorientation', _orientHandler);
 }
