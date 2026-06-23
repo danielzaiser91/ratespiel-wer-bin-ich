@@ -324,6 +324,9 @@ document.addEventListener('DOMContentLoaded', () => {
     S.roundValue = Math.max(1, parseInt(e.target.value) || 10);
   });
 
+  // Central tap zone → correct
+  $('tap-zone').addEventListener('click', triggerCorrect);
+
   // Navigation
   $('btn-to-category').addEventListener('click', showCategory);
   $('btn-back-from-category').addEventListener('click', showStart);

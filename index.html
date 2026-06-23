@@ -23,63 +23,65 @@
 <!-- ── SCREEN: START ───────────────────────────────────────────────────── -->
 <div id="screen-start" class="screen hidden">
   <div class="start-inner">
-    <h1 data-i18n="appTitle">Wer bin ich?</h1>
 
-    <!-- Language -->
-    <div class="row">
-      <button class="lang-btn active" data-lang="de">🇩🇪 DE</button>
-      <button class="lang-btn" data-lang="en">🇬🇧 EN</button>
-    </div>
-
-    <!-- Game mode -->
-    <div class="section-label" data-i18n="modeLabel">Spielmodus</div>
-    <div class="row">
-      <button class="mode-btn active" data-mode="word" data-i18n="modeWord">Wort</button>
-      <button class="mode-btn" data-mode="image" data-i18n="modeImage">Bild</button>
-    </div>
-
-    <!-- Round mode -->
-    <div class="section-label" data-i18n="roundLabel">Runden</div>
-    <div class="row">
-      <button class="round-btn active" data-rmode="infinite" data-i18n="roundInfinite">Unendlich</button>
-      <button class="round-btn" data-rmode="time" data-i18n="roundTime">Auf Zeit</button>
-      <button class="round-btn" data-rmode="cards" data-i18n="roundCards">X Karten</button>
-    </div>
-
-    <!-- Time options -->
-    <div id="time-options" class="hidden sub-options">
+    <!-- LEFT col: title + lang + mode -->
+    <div class="start-col start-col-left">
+      <h1 data-i18n="appTitle">Wer bin ich?</h1>
       <div class="row">
-        <button class="time-preset active" data-val="30">30s</button>
-        <button class="time-preset" data-val="60">60s</button>
-        <button class="time-preset" data-val="90">90s</button>
-        <button class="time-preset" data-val="custom" data-i18n="roundCustom">Eigene</button>
+        <button class="lang-btn active" data-lang="de">🇩🇪 DE</button>
+        <button class="lang-btn" data-lang="en">🇬🇧 EN</button>
       </div>
-      <div id="time-custom-wrap" class="hidden custom-wrap">
-        <input id="time-custom-input" type="number" min="1" max="3600" value="60" class="custom-input"> s
-      </div>
-    </div>
-
-    <!-- Cards options -->
-    <div id="cards-options" class="hidden sub-options">
+      <div class="section-label" data-i18n="modeLabel">Spielmodus</div>
       <div class="row">
-        <button class="cards-preset active" data-val="5">5</button>
-        <button class="cards-preset" data-val="10">10</button>
-        <button class="cards-preset" data-val="20">20</button>
-        <button class="cards-preset" data-val="custom" data-i18n="roundCustom">Eigene</button>
+        <button class="mode-btn active" data-mode="word" data-i18n="modeWord">Wort</button>
+        <button class="mode-btn" data-mode="image" data-i18n="modeImage">Bild</button>
       </div>
-      <div id="cards-custom-wrap" class="hidden custom-wrap">
-        <input id="cards-custom-input" type="number" min="1" max="999" value="10" class="custom-input">
-        <span data-i18n="cardsSuffix"> Karten</span>
+      <!-- iOS sensor -->
+      <div id="sensor-area" class="hidden sensor-area">
+        <p data-i18n="sensorHint">Bewegungssensor wird benötigt.</p>
+        <button id="btn-sensor" class="btn-secondary" data-i18n="sensorBtn">Sensor erlauben</button>
       </div>
     </div>
 
-    <!-- iOS sensor -->
-    <div id="sensor-area" class="hidden sensor-area">
-      <p data-i18n="sensorHint">Bewegungssensor wird benötigt.</p>
-      <button id="btn-sensor" class="btn-secondary" data-i18n="sensorBtn">Sensor erlauben</button>
+    <!-- RIGHT col: round mode + sub-options + start -->
+    <div class="start-col start-col-right">
+      <div class="section-label" data-i18n="roundLabel">Runden</div>
+      <div class="row">
+        <button class="round-btn active" data-rmode="infinite" data-i18n="roundInfinite">Unendlich</button>
+        <button class="round-btn" data-rmode="time" data-i18n="roundTime">Auf Zeit</button>
+        <button class="round-btn" data-rmode="cards" data-i18n="roundCards">X Karten</button>
+      </div>
+
+      <!-- Time options -->
+      <div id="time-options" class="hidden sub-options">
+        <div class="row">
+          <button class="time-preset active" data-val="30">30s</button>
+          <button class="time-preset" data-val="60">60s</button>
+          <button class="time-preset" data-val="90">90s</button>
+          <button class="time-preset" data-val="custom" data-i18n="roundCustom">Eigene</button>
+        </div>
+        <div id="time-custom-wrap" class="hidden custom-wrap">
+          <input id="time-custom-input" type="number" min="1" max="3600" value="60" class="custom-input"> s
+        </div>
+      </div>
+
+      <!-- Cards options -->
+      <div id="cards-options" class="hidden sub-options">
+        <div class="row">
+          <button class="cards-preset active" data-val="5">5</button>
+          <button class="cards-preset" data-val="10">10</button>
+          <button class="cards-preset" data-val="20">20</button>
+          <button class="cards-preset" data-val="custom" data-i18n="roundCustom">Eigene</button>
+        </div>
+        <div id="cards-custom-wrap" class="hidden custom-wrap">
+          <input id="cards-custom-input" type="number" min="1" max="999" value="10" class="custom-input">
+          <span data-i18n="cardsSuffix"> Karten</span>
+        </div>
+      </div>
+
+      <button id="btn-to-category" class="btn-primary" data-i18n="startBtn">Starten</button>
     </div>
 
-    <button id="btn-to-category" class="btn-primary" data-i18n="startBtn">Starten</button>
   </div>
 </div>
 
@@ -107,6 +109,7 @@
   <div class="card-area">
     <div id="card-word" class="card-word"></div>
     <img id="card-image" class="card-image hidden" alt="">
+    <div id="tap-zone" class="tap-zone"></div>
   </div>
 
   <div class="tilt-hint">

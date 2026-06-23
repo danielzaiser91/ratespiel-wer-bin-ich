@@ -10,30 +10,35 @@
   --text: #eaeaea;
   --text2: #a0a0b0;
   --radius: 12px;
-  --fs-huge: clamp(2.5rem, 8vw, 5rem);
-  --fs-lg: clamp(1.1rem, 3vw, 1.6rem);
-  --fs-md: clamp(0.9rem, 2.2vw, 1.2rem);
-  --fs-sm: clamp(0.75rem, 1.8vw, 1rem);
+  --fs-huge: clamp(2rem, 7vw, 4.5rem);
+  --fs-lg: clamp(1rem, 2.8vw, 1.5rem);
+  --fs-md: clamp(0.8rem, 2vw, 1.1rem);
+  --fs-sm: clamp(0.7rem, 1.6vw, 0.9rem);
 }
 
 html, body {
-  width: 100%; height: 100%;
+  width: 100vw; height: 100vh;
+  max-width: 100vw; max-height: 100vh;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
-  overflow: hidden;
   touch-action: manipulation;
 }
+
+/* hide all scrollbars globally */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
 
 .hidden { display: none !important; }
 
 /* ── Screens ─────────────────────────────────────────────────────────────── */
 .screen {
   position: fixed; inset: 0;
+  width: 100vw; height: 100vh;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 16px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 /* ── Rotate Hint ─────────────────────────────────────────────────────────── */
@@ -43,10 +48,10 @@ html, body {
   background: var(--bg);
   flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 16px;
+  gap: 12px;
   font-size: var(--fs-lg);
 }
-.rotate-icon { font-size: 3rem; animation: spin 2s linear infinite; }
+.rotate-icon { font-size: 2.5rem; animation: spin 2s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (orientation: portrait) {
@@ -55,26 +60,30 @@ html, body {
 
 /* ── Start Screen ────────────────────────────────────────────────────────── */
 .start-inner {
-  width: 100%; max-width: 700px;
-  display: flex; flex-direction: column;
-  align-items: center; gap: 10px;
+  width: 100%; height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+  padding: 12px 24px;
+  align-items: center;
 }
 
-@media (max-height: 420px) {
-  .start-inner { gap: 6px; }
-  h1 { font-size: clamp(1.6rem, 5vw, 2.5rem); }
-  .section-label { margin-top: 0; }
-  .lang-btn, .mode-btn, .round-btn, .time-preset, .cards-preset { padding: 7px 14px; font-size: var(--fs-sm); }
-  .btn-primary { padding: 10px 28px; font-size: var(--fs-md); margin-top: 4px; }
-  .sensor-area { padding: 8px; }
+.start-col {
+  display: flex; flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  justify-content: center;
 }
+
+.start-col-left { align-items: flex-start; }
+.start-col-right { align-items: flex-start; }
 
 h1 {
-  font-size: var(--fs-huge);
+  font-size: clamp(1.8rem, 5.5vw, 3.5rem);
   font-weight: 900;
   color: var(--accent);
   letter-spacing: -1px;
-  text-align: center;
+  line-height: 1;
 }
 
 .section-label {
@@ -82,18 +91,17 @@ h1 {
   color: var(--text2);
   text-transform: uppercase;
   letter-spacing: 1px;
-  align-self: flex-start;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .row {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  justify-content: center; width: 100%;
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: flex-start; width: 100%;
 }
 
-/* Toggle buttons (lang, mode, round, presets) */
+/* Toggle buttons */
 .lang-btn, .mode-btn, .round-btn, .time-preset, .cards-preset {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: 2px solid var(--accent2);
   border-radius: var(--radius);
   background: transparent;
@@ -101,7 +109,8 @@ h1 {
   font-size: var(--fs-md);
   cursor: pointer;
   transition: all 0.15s;
-  min-width: 80px;
+  min-width: 64px;
+  white-space: nowrap;
 }
 .lang-btn.active, .mode-btn.active, .round-btn.active,
 .time-preset.active, .cards-preset.active {
@@ -113,10 +122,10 @@ h1 {
 
 .sub-options {
   width: 100%;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
   background: var(--bg2);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 10px;
 }
 
 .custom-wrap {
@@ -125,8 +134,8 @@ h1 {
 }
 
 .custom-input {
-  width: 90px;
-  padding: 8px 12px;
+  width: 80px;
+  padding: 6px 10px;
   border: 2px solid var(--accent2);
   border-radius: var(--radius);
   background: var(--bg);
@@ -136,9 +145,8 @@ h1 {
 }
 .custom-input:focus { outline: none; border-color: var(--accent); }
 
-/* Primary / secondary buttons */
 .btn-primary {
-  padding: 14px 36px;
+  padding: 12px 32px;
   background: var(--accent);
   color: #fff;
   border: none;
@@ -147,41 +155,45 @@ h1 {
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s;
-  margin-top: 8px;
+  margin-top: 4px;
+  align-self: flex-start;
 }
 .btn-primary:active { opacity: 0.8; }
 
 .btn-secondary {
-  padding: 12px 28px;
+  padding: 8px 20px;
   background: transparent;
   color: var(--text);
   border: 2px solid var(--text2);
   border-radius: var(--radius);
   font-size: var(--fs-md);
   cursor: pointer;
-  transition: border-color 0.15s;
 }
-.btn-secondary:active { border-color: var(--text); }
 
 .sensor-area {
   width: 100%;
   background: var(--bg2);
   border-radius: var(--radius);
-  padding: 14px;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 10px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
   border: 1px solid var(--accent);
   font-size: var(--fs-sm);
   color: var(--text2);
-  text-align: center;
 }
 
 /* ── Category Screen ─────────────────────────────────────────────────────── */
+#screen-category {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
 .screen-header {
-  position: fixed; top: 0; left: 0; right: 0;
-  display: flex; align-items: center; gap: 16px;
-  padding: 12px 20px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
   background: var(--bg);
-  z-index: 10;
+  border-bottom: 1px solid var(--accent2);
+  flex-shrink: 0;
+  width: 100%;
 }
 .screen-header h2 { font-size: var(--fs-lg); }
 .btn-back {
@@ -189,17 +201,18 @@ h1 {
   font-size: var(--fs-md); cursor: pointer; white-space: nowrap;
 }
 
-#screen-category { padding-top: 64px; align-items: flex-start; justify-content: flex-start; }
-
 .cat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  width: 100%; padding: 8px 16px 24px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 12px 16px;
+  width: 100%;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .cat-btn {
-  padding: 20px 12px;
+  padding: 16px 10px;
   background: var(--bg2);
   border: 2px solid var(--accent2);
   border-radius: var(--radius);
@@ -220,22 +233,22 @@ h1 {
 }
 
 .game-hud {
-  display: flex; align-items: center; gap: 12px;
-  padding: 8px 16px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 14px;
   width: 100%;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.4);
   flex-shrink: 0;
 }
 
 .hud-score {
-  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-size: clamp(1.3rem, 3.5vw, 1.8rem);
   font-weight: 900;
   color: var(--green);
-  min-width: 40px;
+  min-width: 36px;
 }
 
 .hud-timer {
-  font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
   font-weight: 700;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -251,20 +264,23 @@ h1 {
 }
 
 .btn-end {
-  padding: 6px 14px;
+  padding: 5px 12px;
   background: transparent;
   border: 1px solid var(--text2);
   border-radius: 8px;
   color: var(--text2);
   font-size: var(--fs-sm);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
+/* Card area fills remaining space */
 .card-area {
   flex: 1;
+  position: relative;
   display: flex; align-items: center; justify-content: center;
-  padding: 16px;
   width: 100%;
+  overflow: hidden;
 }
 
 .card-word {
@@ -275,7 +291,8 @@ h1 {
   text-shadow: 0 2px 20px rgba(0,0,0,0.5);
   line-height: 1.1;
   word-break: break-word;
-  white-space: pre-wrap;
+  padding: 0 16px;
+  pointer-events: none;
 }
 
 .card-image {
@@ -283,11 +300,31 @@ h1 {
   max-height: 100%;
   object-fit: contain;
   border-radius: var(--radius);
+  pointer-events: none;
+}
+
+/* Central tap zone – 40vw × 40vh, centered */
+.tap-zone {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 40vw;
+  height: 40vh;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  /* subtle pulse to hint it's tappable */
+  background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.15s;
+}
+.tap-zone:active {
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
 }
 
 .tilt-hint {
-  display: flex; justify-content: space-between;
-  padding: 8px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 16px;
   width: 100%;
   flex-shrink: 0;
 }
@@ -308,24 +345,26 @@ h1 {
 }
 
 /* ── Summary Screen ──────────────────────────────────────────────────────── */
+#screen-summary { padding: 16px; }
+
 .summary-inner {
   display: flex; flex-direction: column;
-  align-items: center; gap: 24px;
+  align-items: center; gap: 16px;
   width: 100%; max-width: 600px;
 }
-.summary-inner h2 { font-size: clamp(1.8rem, 5vw, 3rem); color: var(--accent); }
+.summary-inner h2 { font-size: clamp(1.6rem, 4.5vw, 2.5rem); color: var(--accent); }
 
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
 
 .sum-item {
   background: var(--bg2);
   border-radius: var(--radius);
-  padding: 16px 8px;
+  padding: 12px 6px;
   text-align: center;
   border: 2px solid var(--accent2);
 }
@@ -333,8 +372,10 @@ h1 {
 .sum-wrong   { border-color: var(--red); }
 .sum-score   { border-color: var(--accent); }
 
-.sum-label { font-size: var(--fs-sm); color: var(--text2); margin-bottom: 6px; }
-.sum-value { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 900; }
+.sum-label { font-size: var(--fs-sm); color: var(--text2); margin-bottom: 4px; }
+.sum-value { font-size: clamp(1.3rem, 3.5vw, 2rem); font-weight: 900; }
 .sum-correct .sum-value { color: var(--green); }
 .sum-wrong   .sum-value { color: var(--red); }
 .sum-score   .sum-value { color: var(--accent); }
+
+#screen-summary .row { justify-content: center; gap: 12px; }
