@@ -405,6 +405,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('btn-install-skip').addEventListener('click', () => {
     hide('install-overlay');
+    // Request fullscreen so browser mode feels like the app
+    const el = document.documentElement;
+    (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen)?.call(el);
   });
 
   // iOS: show manual instructions instead of install button
