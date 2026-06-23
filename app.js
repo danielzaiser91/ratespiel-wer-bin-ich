@@ -305,6 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.round-btn').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       S.roundMode = b.dataset.rmode;
+      if (S.roundMode === 'time')  S.roundValue = 30;
+      if (S.roundMode === 'cards') S.roundValue = 5;
       renderRoundOptions();
     });
   });
