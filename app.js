@@ -37,15 +37,32 @@ function soundCorrect() { beep(880, 0.15); setTimeout(() => beep(1320, 0.2), 100
 function soundWrong()   { beep(200, 0.3, 'sawtooth', 0.2); }
 
 // ── Wikimedia ──────────────────────────────────────────────────────────────
+async function fetchWikiImageByTitle(title, lang) {
+  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
+  const r = await fetch(url);
+  const j = await r.json();
+  const pages = j.query?.pages;
+  const page = pages ? Object.values(pages)[0] : null;
+  return page?.thumbnail?.source || null;
+}
+
 async function fetchWikiImage(term) {
   const lang = S.lang === 'de' ? 'de' : 'en';
-  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(term)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
   try {
-    const r = await fetch(url);
-    const j = await r.json();
-    const pages = j.query?.pages;
-    const page = pages ? Object.values(pages)[0] : null;
-    return page?.thumbnail?.source || null;
+    // 1. Direct title lookup
+    const direct = await fetchWikiImageByTitle(term, lang);
+    if (direct) return direct;
+
+    // 2. Search fallback – find the best matching article title
+    const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srlimit=3&format=json&origin=*`;
+    const sr = await fetch(searchUrl);
+    const sj = await sr.json();
+    const hits = sj.query?.search || [];
+    for (const hit of hits) {
+      const img = await fetchWikiImageByTitle(hit.title, lang);
+      if (img) return img;
+    }
+    return null;
   } catch { return null; }
 }
 
@@ -135,7 +152,11 @@ async function showCard() {
       $('card-image').classList.remove('hidden');
       $('card-word').classList.add('hidden');
     } else {
-      $('card-word').textContent = word + '\n(' + t('noImage') + ')';
+      // no image found → silently skip this card
+      S.index++;
+      if (S.index >= S.deck.length) { endGame(); return; }
+      await showCard();
+      return;
     }
     // preload next
     if (S.deck[S.index + 1]) fetchWikiImage(S.deck[S.index + 1]);
