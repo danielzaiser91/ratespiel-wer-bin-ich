@@ -30,6 +30,26 @@
   </div>
 </div>
 
+<!-- Calibration overlay -->
+<div id="calib-overlay" class="calib-overlay hidden">
+  <div class="calib-box">
+    <h2 data-i18n="calibTitle">Kalibrierung</h2>
+    <p data-i18n="calibDesc">Halte das Handy so wie du es im Spiel hältst – quer vor deine Stirn, Bildschirm von dir weg – und drücke dann OK.</p>
+    <div class="calib-live">
+      <span data-i18n="calibAngle">Winkel:</span>
+      <span id="calib-beta" class="calib-beta">--°</span>
+    </div>
+    <label class="calib-invert-row">
+      <input type="checkbox" id="calib-invert-check">
+      <span data-i18n="calibInvert">Richtung umkehren</span>
+    </label>
+    <div class="calib-btns">
+      <button id="btn-calib-ok" class="btn-primary" data-i18n="calibOk">OK – Kalibrieren</button>
+      <button id="btn-calib-cancel" class="btn-secondary" data-i18n="back">Zurück</button>
+    </div>
+  </div>
+</div>
+
 <!-- Rotate hint overlay -->
 <div id="rotate-hint" class="rotate-hint">
   <div class="rotate-icon">⟳</div>
@@ -52,6 +72,8 @@
         <button class="mode-btn active" data-mode="word" data-i18n="modeWord">Wort</button>
         <button class="mode-btn" data-mode="image" data-i18n="modeImage">Bild</button>
       </div>
+      <button id="btn-open-calib" class="btn-calib" data-i18n="calibBtn">⊙ Kippen kalibrieren</button>
+
       <!-- iOS sensor -->
       <div id="sensor-area" class="hidden sensor-area">
         <p data-i18n="sensorHint">Bewegungssensor wird benötigt.</p>

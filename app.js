@@ -12,8 +12,9 @@ const S = {
   startTime: 0,
   timer: null,
   timeLeft: 0,
-  advancing: false,   // blocks double-trigger during card transition
+  advancing: false,
   neutralBeta: null,
+  tiltInvert: false,
   currentImage: null,
 };
 
@@ -243,20 +244,22 @@ function endGame() {
 let _orientHandler = null;
 
 function calibrateTilt() {
-  S.neutralBeta = null;
-  const calibrate = e => {
+  // Use stored calibration if available, otherwise fall back to auto-detect
+  if (S.neutralBeta !== null) { listenTilt(); return; }
+  const autoCalib = e => {
     S.neutralBeta = e.beta;
-    window.removeEventListener('deviceorientation', calibrate);
+    window.removeEventListener('deviceorientation', autoCalib);
     listenTilt();
   };
-  window.addEventListener('deviceorientation', calibrate);
+  window.addEventListener('deviceorientation', autoCalib);
 }
 
 function listenTilt() {
   let tiltCooldown = false;
   _orientHandler = e => {
     if (S.advancing || tiltCooldown || S.neutralBeta === null) return;
-    const delta = e.beta - S.neutralBeta;
+    let delta = e.beta - S.neutralBeta;
+    if (S.tiltInvert) delta = -delta;
     if (delta < -25) {
       tiltCooldown = true;
       setTimeout(() => { tiltCooldown = false; }, 1500);
@@ -286,6 +289,43 @@ async function requestSensor() {
   } else {
     $('sensor-area').classList.add('hidden');
   }
+}
+
+// ── Calibration ────────────────────────────────────────────────────────────
+let _calibHandler = null;
+
+function loadCalib() {
+  const stored = localStorage.getItem('tilt_calib');
+  if (stored) {
+    const c = JSON.parse(stored);
+    S.neutralBeta = c.neutral;
+    S.tiltInvert  = c.invert ?? false;
+  }
+}
+
+function openCalib() {
+  show('calib-overlay');
+  $('calib-invert-check').checked = S.tiltInvert ?? false;
+
+  _calibHandler = e => {
+    const b = Math.round(e.beta ?? 0);
+    $('calib-beta').textContent = b + '°';
+  };
+  window.addEventListener('deviceorientation', _calibHandler);
+}
+
+function closeCalib() {
+  hide('calib-overlay');
+  if (_calibHandler) { window.removeEventListener('deviceorientation', _calibHandler); _calibHandler = null; }
+}
+
+function saveCalib() {
+  const betaEl = $('calib-beta').textContent;
+  const neutral = parseInt(betaEl) || 0;
+  S.neutralBeta = neutral;
+  S.tiltInvert  = $('calib-invert-check').checked;
+  localStorage.setItem('tilt_calib', JSON.stringify({ neutral, invert: S.tiltInvert }));
+  closeCalib();
 }
 
 // ── PWA Install ────────────────────────────────────────────────────────────
@@ -371,6 +411,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Central tap zone → correct
   $('tap-zone').addEventListener('click', triggerCorrect);
 
+  // Calibration
+  $('btn-open-calib').addEventListener('click', openCalib);
+  $('btn-calib-ok').addEventListener('click', saveCalib);
+  $('btn-calib-cancel').addEventListener('click', closeCalib);
+
   // Navigation
   $('btn-to-category').addEventListener('click', showCategory);
   $('btn-back-from-category').addEventListener('click', showStart);
@@ -435,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  loadCalib();
   showStart();
   renderAll();
 });
