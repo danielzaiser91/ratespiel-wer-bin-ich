@@ -128,7 +128,7 @@ async function startGame() {
   S.deck = shuffle(getWords(S.category, S.lang));
   S.index = 0; S.correct = 0; S.wrong = 0;
   S.startTime = Date.now();
-  S.advancing = false; S.neutralBeta = null;
+  S.advancing = false;
   hideAll(); show('screen-game');
   hide('timer-display');
   renderAll();
@@ -292,8 +292,14 @@ async function requestSensor() {
   }
 }
 
-// ── Calibration ────────────────────────────────────────────────────────────
-let _calibHandler = null;
+// ── Calibration Wizard ─────────────────────────────────────────────────────
+const _calib = { step: 0, samples: [], neutral: 0, forward: 0, handler: null, timer: null };
+
+const CALIB_STEPS_CFG = [
+  { icon: '📱', key: 'calibStep1' },
+  { icon: '✅', key: 'calibStep2' },
+  { icon: '❌', key: 'calibStep3' },
+];
 
 function loadCalib() {
   const stored = localStorage.getItem('tilt_calib');
@@ -306,27 +312,68 @@ function loadCalib() {
 
 function openCalib() {
   show('calib-overlay');
-  $('calib-invert-check').checked = S.tiltInvert ?? false;
-
-  _calibHandler = e => {
-    const b = Math.round(e.beta ?? 0);
-    $('calib-beta').textContent = b + '°';
-  };
-  window.addEventListener('deviceorientation', _calibHandler);
+  show('calib-wizard');
+  hide('calib-done');
+  _calibRunStep(0);
 }
 
 function closeCalib() {
   hide('calib-overlay');
-  if (_calibHandler) { window.removeEventListener('deviceorientation', _calibHandler); _calibHandler = null; }
+  if (_calib.handler) { window.removeEventListener('deviceorientation', _calib.handler); _calib.handler = null; }
+  clearTimeout(_calib.timer);
 }
 
-function saveCalib() {
-  const betaEl = $('calib-beta').textContent;
-  const neutral = parseInt(betaEl) || 0;
-  S.neutralBeta = neutral;
-  S.tiltInvert  = $('calib-invert-check').checked;
-  localStorage.setItem('tilt_calib', JSON.stringify({ neutral, invert: S.tiltInvert }));
-  closeCalib();
+function _calibRunStep(step) {
+  if (_calib.handler) { window.removeEventListener('deviceorientation', _calib.handler); _calib.handler = null; }
+  clearTimeout(_calib.timer);
+
+  if (step >= 3) {
+    // Auto-detect direction: if forward tilt increased beta → no invert; decreased → invert
+    const tiltInvert = _calib.forward < _calib.neutral;
+    S.neutralBeta = _calib.neutral;
+    S.tiltInvert  = tiltInvert;
+    localStorage.setItem('tilt_calib', JSON.stringify({ neutral: _calib.neutral, invert: tiltInvert }));
+    hide('calib-wizard');
+    show('calib-done');
+    _calib.timer = setTimeout(closeCalib, 1500);
+    return;
+  }
+
+  _calib.step = step;
+  _calib.samples = [];
+
+  const cfg = CALIB_STEPS_CFG[step];
+  $('calib-wizard-icon').textContent = cfg.icon;
+  $('calib-wizard-text').textContent = t(cfg.key);
+
+  document.querySelectorAll('.calib-dot').forEach((d, i) => {
+    d.classList.toggle('calib-dot-active', i === step);
+  });
+
+  let seconds = 2;
+  $('calib-countdown').textContent = seconds;
+
+  _calib.handler = e => { if (e.beta !== null) _calib.samples.push(e.beta); };
+  window.addEventListener('deviceorientation', _calib.handler);
+
+  const tick = () => {
+    seconds--;
+    if (seconds > 0) {
+      $('calib-countdown').textContent = seconds;
+      _calib.timer = setTimeout(tick, 1000);
+    } else {
+      $('calib-countdown').textContent = '✓';
+      const avg = _calib.samples.length > 0
+        ? _calib.samples.reduce((a, b) => a + b, 0) / _calib.samples.length
+        : 0;
+      if (step === 0) _calib.neutral = Math.round(avg);
+      else if (step === 1) _calib.forward = Math.round(avg);
+      window.removeEventListener('deviceorientation', _calib.handler);
+      _calib.handler = null;
+      _calib.timer = setTimeout(() => _calibRunStep(step + 1), 500);
+    }
+  };
+  _calib.timer = setTimeout(tick, 1000);
 }
 
 // ── PWA Install ────────────────────────────────────────────────────────────
@@ -414,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Calibration
   $('btn-open-calib').addEventListener('click', openCalib);
-  $('btn-calib-ok').addEventListener('click', saveCalib);
   $('btn-calib-cancel').addEventListener('click', closeCalib);
 
   // Navigation

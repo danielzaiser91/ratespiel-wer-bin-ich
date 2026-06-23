@@ -113,24 +113,46 @@ html, body {
 .calib-box h2 { font-size: var(--fs-lg); color: var(--accent); }
 .calib-box p  { font-size: var(--fs-sm); color: var(--text2); line-height: 1.5; }
 
-.calib-live {
-  background: var(--bg);
-  border-radius: var(--radius);
-  padding: 10px 16px;
+.calib-wizard-icon {
+  font-size: 3rem;
+  text-align: center;
+}
+
+.calib-wizard-text {
   font-size: var(--fs-md);
   color: var(--text2);
-  display: flex; justify-content: center; gap: 8px; align-items: center;
+  line-height: 1.5;
+  text-align: center;
+  min-height: 2.5em;
 }
-.calib-beta { font-size: 1.4rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; min-width: 60px; }
 
-.calib-invert-row {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  font-size: var(--fs-sm); color: var(--text2); cursor: pointer;
+.calib-wizard-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
 }
-.calib-invert-row input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 
-.calib-btns { display: flex; flex-direction: column; gap: 10px; }
-.calib-btns .btn-primary, .calib-btns .btn-secondary { text-align: center; }
+.calib-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent2);
+  transition: background 0.3s;
+}
+.calib-dot-active { background: var(--accent); }
+
+.calib-wizard-countdown {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: var(--accent);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  min-height: 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#calib-done { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
 .calib-teaser {
   display: flex;
@@ -464,15 +486,6 @@ h1 {
 .tap-zone:active {
   background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
 }
-
-.tilt-hint {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 5px 16px;
-  width: 100%;
-  flex-shrink: 0;
-}
-.tilt-correct { color: var(--green); font-size: var(--fs-sm); font-weight: 600; }
-.tilt-wrong   { color: var(--red);   font-size: var(--fs-sm); font-weight: 600; }
 
 /* Flash overlays */
 .flash {

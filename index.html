@@ -34,19 +34,21 @@
 <div id="calib-overlay" class="calib-overlay hidden">
   <div class="calib-box">
     <h2 data-i18n="calibTitle">Kalibrierung</h2>
-    <p data-i18n="calibDesc">Halte das Handy so wie du es im Spiel hältst – quer vor deine Stirn, Bildschirm von dir weg – und drücke dann OK.</p>
-    <div class="calib-live">
-      <span data-i18n="calibAngle">Winkel:</span>
-      <span id="calib-beta" class="calib-beta">--°</span>
+    <div id="calib-wizard">
+      <div class="calib-wizard-icon" id="calib-wizard-icon">📱</div>
+      <p class="calib-wizard-text" id="calib-wizard-text"></p>
+      <div class="calib-wizard-dots">
+        <span class="calib-dot"></span>
+        <span class="calib-dot"></span>
+        <span class="calib-dot"></span>
+      </div>
+      <div class="calib-wizard-countdown" id="calib-countdown">2</div>
     </div>
-    <label class="calib-invert-row">
-      <input type="checkbox" id="calib-invert-check">
-      <span data-i18n="calibInvert">Richtung umkehren</span>
-    </label>
-    <div class="calib-btns">
-      <button id="btn-calib-ok" class="btn-primary" data-i18n="calibOk">OK – Kalibrieren</button>
-      <button id="btn-calib-cancel" class="btn-secondary" data-i18n="back">Zurück</button>
+    <div id="calib-done" class="hidden">
+      <div class="calib-wizard-icon">✅</div>
+      <p class="calib-wizard-text" data-i18n="calibDone">Kalibrierung gespeichert!</p>
     </div>
+    <button id="btn-calib-cancel" class="btn-secondary" data-i18n="back">Zurück</button>
   </div>
 </div>
 
@@ -128,7 +130,7 @@
     </div>
 
   </div>
-  <span class="version-label">v1.2</span>
+  <span class="version-label">v1.3</span>
 </div>
 
 <!-- ── SCREEN: CATEGORY ────────────────────────────────────────────────── -->
@@ -158,10 +160,6 @@
     <div id="tap-zone" class="tap-zone"></div>
   </div>
 
-  <div class="tilt-hint">
-    <span class="tilt-correct" data-i18n="correct">✓ Richtig!</span>
-    <span class="tilt-wrong" data-i18n="wrong">✗ Weiter</span>
-  </div>
 </div>
 
 <!-- ── SCREEN: SUMMARY ────────────────────────────────────────────────── -->

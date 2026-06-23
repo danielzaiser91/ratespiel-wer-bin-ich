@@ -17,6 +17,7 @@ Nie vergessen. Keine Ausnahme.
 | v1.0        | v5         | 2026-06-23 | Launch                              |
 | v1.1        | v6         | 2026-06-23 | Kalibrierungs-UI redesign           |
 | v1.2        | v7         | 2026-06-23 | Tiltrichtung korrigiert, Cooldown 300ms |
+| v1.3        | v8         | 2026-06-23 | Kalibrierung als geführter 3-Schritt-Wizard, Tilt-Hint entfernt |
 
 ## Projekt-Übersicht
 
