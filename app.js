@@ -446,8 +446,17 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
-function lockLandscape()   { screen.orientation?.lock?.('landscape')?.catch(() => {}); }
-function unlockLandscape() { try { screen.orientation?.unlock?.(); } catch(_) {} }
+async function lockLandscape() {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+    }
+    await screen.orientation?.lock?.('landscape');
+  } catch(_) {}
+}
+function unlockLandscape() {
+  try { screen.orientation?.unlock?.(); } catch(_) {}
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   // Language buttons
