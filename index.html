@@ -60,6 +60,21 @@
   </div>
 </div>
 
+<!-- Sensor debug overlay -->
+<div id="sensor-debug" class="calib-overlay hidden">
+  <div class="calib-box">
+    <h2>Sensor Debug</h2>
+    <div class="sensor-debug-grid">
+      <span class="sensor-debug-label">β (beta)</span>  <span id="dbg-beta"  class="sensor-debug-val">--</span>
+      <span class="sensor-debug-label">γ (gamma)</span> <span id="dbg-gamma" class="sensor-debug-val">--</span>
+      <span class="sensor-debug-label">Projektion</span><span id="dbg-proj"  class="sensor-debug-val">--</span>
+      <span class="sensor-debug-label">Richtung</span>  <span id="dbg-dir"   class="sensor-debug-val sensor-debug-dir">--</span>
+    </div>
+    <p class="calib-wizard-text" style="font-size:0.75rem">Kippe das Handy in alle Richtungen und beobachte die Werte. "Projektion" zeigt was das Spiel messen würde.</p>
+    <button id="btn-debug-close" class="btn-secondary" data-i18n="back">Zurück</button>
+  </div>
+</div>
+
 <!-- Rotate hint overlay -->
 <div id="rotate-hint" class="rotate-hint">
   <div class="rotate-icon">⟳</div>
@@ -88,7 +103,10 @@
           <strong data-i18n="calibTeaserTitle">Kipperkennung kalibrieren</strong>
           <span data-i18n="calibTeaserDesc">Damit Richtig &amp; Falsch zuverlässig erkannt werden</span>
         </div>
-        <button id="btn-open-calib" class="calib-teaser-btn" data-i18n="calibTeaserBtn">Kalibrieren</button>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <button id="btn-open-calib" class="calib-teaser-btn" data-i18n="calibTeaserBtn">Kalibrieren</button>
+          <button id="btn-open-debug" class="calib-teaser-btn" style="background:var(--accent2);font-size:0.65rem">Testen</button>
+        </div>
       </div>
 
       <!-- iOS sensor -->
@@ -138,7 +156,7 @@
     </div>
 
   </div>
-  <span class="version-label">v1.8</span>
+  <span class="version-label">v1.9</span>
 </div>
 
 <!-- ── SCREEN: CATEGORY ────────────────────────────────────────────────── -->

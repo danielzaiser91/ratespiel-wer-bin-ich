@@ -494,6 +494,30 @@ document.addEventListener('DOMContentLoaded', () => {
     _calibRunStep(1);
   });
 
+  // Sensor debug
+  let _dbgHandler = null;
+  $('btn-open-debug').addEventListener('click', () => {
+    show('sensor-debug');
+    _dbgHandler = e => {
+      const beta  = e.beta  ?? 0;
+      const gamma = e.gamma ?? 0;
+      $('dbg-beta').textContent  = Math.round(beta)  + '°';
+      $('dbg-gamma').textContent = Math.round(gamma) + '°';
+      // Projection using current calibration direction
+      const db = beta  - (S.neutralBeta  ?? 0);
+      const dg = gamma - (S.neutralGamma ?? 0);
+      const proj = db * S.tiltDirBeta + dg * S.tiltDirGamma;
+      $('dbg-proj').textContent = Math.round(proj) + '°';
+      const dir = proj > 40 ? '✅ RICHTIG' : proj < -40 ? '❌ WEITER' : '↔ neutral';
+      $('dbg-dir').textContent = dir;
+    };
+    window.addEventListener('deviceorientation', _dbgHandler);
+  });
+  $('btn-debug-close').addEventListener('click', () => {
+    hide('sensor-debug');
+    if (_dbgHandler) { window.removeEventListener('deviceorientation', _dbgHandler); _dbgHandler = null; }
+  });
+
   // Navigation
   $('btn-to-category').addEventListener('click', showCategory);
   $('btn-back-from-category').addEventListener('click', showStart);
