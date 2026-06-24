@@ -13,8 +13,10 @@ const S = {
   timer: null,
   timeLeft: 0,
   advancing: false,
-  neutralBeta: null,
-  tiltInvert: false,
+  neutralBeta: null,  // auto-detected at game start
+  neutralGamma: null,
+  tiltDirBeta: 1,     // normalized forward-tilt direction vector
+  tiltDirGamma: 0,
   currentImage: null,
 };
 
@@ -128,7 +130,7 @@ async function startGame() {
   S.deck = shuffle(getWords(S.category, S.lang));
   S.index = 0; S.correct = 0; S.wrong = 0;
   S.startTime = Date.now();
-  S.advancing = false;
+  S.advancing = false; S.neutralBeta = null; S.neutralGamma = null;
   hideAll(); show('screen-game');
   hide('timer-display');
   renderAll();
@@ -246,10 +248,10 @@ function endGame() {
 let _orientHandler = null;
 
 function calibrateTilt() {
-  // Use stored calibration if available, otherwise fall back to auto-detect
-  if (S.neutralBeta !== null) { listenTilt(); return; }
+  // Neutral angle is always auto-detected fresh at game start (direction is saved from wizard)
   const autoCalib = e => {
-    S.neutralBeta = e.beta;
+    S.neutralBeta  = e.beta  ?? 0;
+    S.neutralGamma = e.gamma ?? 0;
     window.removeEventListener('deviceorientation', autoCalib);
     listenTilt();
   };
@@ -260,14 +262,15 @@ function listenTilt() {
   let tiltCooldown = false;
   _orientHandler = e => {
     if (S.advancing || tiltCooldown || S.neutralBeta === null) return;
-    let delta = e.beta - S.neutralBeta;
-    if (S.tiltInvert) delta = -delta;
-    // Phone held against forehead screen-away: forward tilt increases beta
-    if (delta > 25) {
+    const db = (e.beta  ?? 0) - S.neutralBeta;
+    const dg = (e.gamma ?? 0) - S.neutralGamma;
+    // Project current delta onto calibrated forward-tilt direction
+    const proj = db * S.tiltDirBeta + dg * S.tiltDirGamma;
+    if (proj > 25) {
       tiltCooldown = true;
       setTimeout(() => { tiltCooldown = false; }, 300);
       triggerCorrect();
-    } else if (delta < -25) {
+    } else if (proj < -25) {
       tiltCooldown = true;
       setTimeout(() => { tiltCooldown = false; }, 300);
       triggerWrong();
@@ -295,7 +298,14 @@ async function requestSensor() {
 }
 
 // ── Calibration Wizard ─────────────────────────────────────────────────────
-const _calib = { step: 0, samples: [], neutral: 0, forward: 0, handler: null, timer: null };
+const _calib = {
+  step: 0,
+  samples: [],                         // [{beta, gamma}, ...]
+  neutral: { beta: 0, gamma: 0 },
+  forward: { beta: 0, gamma: 0 },
+  handler: null,
+  timer: null,
+};
 
 const CALIB_STEPS_CFG = [
   { icon: '📱', key: 'calibStep1' },
@@ -307,8 +317,9 @@ function loadCalib() {
   const stored = localStorage.getItem('tilt_calib');
   if (stored) {
     const c = JSON.parse(stored);
-    S.neutralBeta = c.neutral;
-    S.tiltInvert  = c.invert ?? false;
+    // Only load direction – neutral is always re-detected at game start
+    S.tiltDirBeta  = c.dirBeta  ?? 1;
+    S.tiltDirGamma = c.dirGamma ?? 0;
   }
 }
 
@@ -330,11 +341,16 @@ function _calibRunStep(step) {
   clearTimeout(_calib.timer);
 
   if (step >= 3) {
-    // Auto-detect direction: if forward tilt increased beta → no invert; decreased → invert
-    const tiltInvert = _calib.forward < _calib.neutral;
-    S.neutralBeta = _calib.neutral;
-    S.tiltInvert  = tiltInvert;
-    localStorage.setItem('tilt_calib', JSON.stringify({ neutral: _calib.neutral, invert: tiltInvert }));
+    // Compute forward-tilt direction vector in beta-gamma space
+    const db = _calib.forward.beta  - _calib.neutral.beta;
+    const dg = _calib.forward.gamma - _calib.neutral.gamma;
+    const len = Math.sqrt(db * db + dg * dg);
+    // If barely any movement detected, fall back to pure-beta direction
+    const dirBeta  = len > 3 ? db / len : 1;
+    const dirGamma = len > 3 ? dg / len : 0;
+    S.tiltDirBeta  = dirBeta;
+    S.tiltDirGamma = dirGamma;
+    localStorage.setItem('tilt_calib', JSON.stringify({ dirBeta, dirGamma }));
     hide('calib-wizard');
     show('calib-done');
     _calib.timer = setTimeout(closeCalib, 1500);
@@ -355,7 +371,9 @@ function _calibRunStep(step) {
   let seconds = 2;
   $('calib-countdown').textContent = seconds;
 
-  _calib.handler = e => { if (e.beta !== null) _calib.samples.push(e.beta); };
+  _calib.handler = e => {
+    _calib.samples.push({ beta: e.beta ?? 0, gamma: e.gamma ?? 0 });
+  };
   window.addEventListener('deviceorientation', _calib.handler);
 
   const tick = () => {
@@ -365,11 +383,11 @@ function _calibRunStep(step) {
       _calib.timer = setTimeout(tick, 1000);
     } else {
       $('calib-countdown').textContent = '✓';
-      const avg = _calib.samples.length > 0
-        ? _calib.samples.reduce((a, b) => a + b, 0) / _calib.samples.length
-        : 0;
-      if (step === 0) _calib.neutral = Math.round(avg);
-      else if (step === 1) _calib.forward = Math.round(avg);
+      const n = _calib.samples.length;
+      const avgBeta  = n > 0 ? _calib.samples.reduce((a, s) => a + s.beta,  0) / n : 0;
+      const avgGamma = n > 0 ? _calib.samples.reduce((a, s) => a + s.gamma, 0) / n : 0;
+      if (step === 0) _calib.neutral = { beta: avgBeta, gamma: avgGamma };
+      if (step === 1) _calib.forward = { beta: avgBeta, gamma: avgGamma };
       window.removeEventListener('deviceorientation', _calib.handler);
       _calib.handler = null;
       _calib.timer = setTimeout(() => _calibRunStep(step + 1), 500);

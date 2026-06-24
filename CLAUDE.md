@@ -19,6 +19,7 @@ Nie vergessen. Keine Ausnahme.
 | v1.2        | v7         | 2026-06-23 | Tiltrichtung korrigiert, Cooldown 300ms |
 | v1.3        | v8         | 2026-06-23 | Kalibrierung als geführter 3-Schritt-Wizard, Tilt-Hint entfernt |
 | v1.4        | v9         | 2026-06-23 | Berufe-Bild-Suche mit imageSearchSuffix " Beruf" disambiguiert |
+| v1.5        | v10        | 2026-06-24 | Tilt: 3D-Richtungsvektor (beta+gamma) statt nur beta-Achse |
 
 ## Projekt-Übersicht
 
