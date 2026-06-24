@@ -151,6 +151,7 @@ async function startGame() {
   renderAll();
   updateProgress();
   if (S.roundMode === 'time') startTimer();
+  else if (S.roundMode === 'infinite') startElapsedTimer();
   await showCard();
   calibrateTilt();
 }
@@ -238,6 +239,14 @@ function startTimer() {
     S.timeLeft--;
     $('timer-display').textContent = formatTime(S.timeLeft);
     if (S.timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+function startElapsedTimer() {
+  show('timer-display');
+  S.timer = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - S.startTime) / 1000);
+    $('timer-display').textContent = formatTime(elapsed);
   }, 1000);
 }
 
