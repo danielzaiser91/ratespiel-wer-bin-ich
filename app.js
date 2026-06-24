@@ -96,6 +96,7 @@ function showStart() {
   show('screen-start');
   renderAll();
   renderRoundOptions();
+  unlockLandscape();
 }
 
 function renderRoundOptions() {
@@ -127,6 +128,7 @@ function showCategory() {
 
 // ── Screen: Game ──────────────────────────────────────────────────────────
 async function startGame() {
+  lockLandscape();
   S.deck = shuffle(getWords(S.category, S.lang));
   S.index = 0; S.correct = 0; S.wrong = 0;
   S.startTime = Date.now();
@@ -415,9 +417,10 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
+function lockLandscape()   { screen.orientation?.lock?.('landscape').catch(() => {}); }
+function unlockLandscape() { try { screen.orientation?.unlock?.(); } catch(_) {} }
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Lock to landscape to prevent rotation even when system lock is off
-  screen.orientation?.lock?.('landscape').catch(() => {});
   // Language buttons
   document.querySelectorAll('.lang-btn').forEach(b => {
     b.addEventListener('click', () => {
@@ -492,8 +495,23 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-calib-cancel').addEventListener('click', closeCalib);
   $('btn-calib-step-ok').addEventListener('click', () => {
     if (_calib.step !== 0) return;
+    lockLandscape();
     _calib.neutral = { ..._calib.latest };
     _calibRunStep(1);
+  });
+
+  // Orientation lock toggle button
+  let _orientLocked = false;
+  $('btn-orient-lock').addEventListener('click', () => {
+    if (_orientLocked) {
+      unlockLandscape();
+      _orientLocked = false;
+      $('btn-orient-lock').textContent = '🔒 Landscape fixieren';
+    } else {
+      lockLandscape();
+      _orientLocked = true;
+      $('btn-orient-lock').textContent = '🔓 Rotation freigeben';
+    }
   });
 
   // Sensor debug
