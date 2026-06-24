@@ -21,6 +21,7 @@ Nie vergessen. Keine Ausnahme.
 | v1.4        | v9         | 2026-06-23 | Berufe-Bild-Suche mit imageSearchSuffix " Beruf" disambiguiert |
 | v1.5        | v10        | 2026-06-24 | Tilt: 3D-Richtungsvektor (beta+gamma) statt nur beta-Achse |
 | v1.6        | v11        | 2026-06-24 | Versionslabel position:fixed statt absolute (kein Layout-Shift) |
+| v1.7        | v12        | 2026-06-24 | Kalibrierung: OK-Klick für neutral, Auto-Detect für vorne/hinten; Schwelle 40°, Cooldown 1,2s |
 
 ## Projekt-Übersicht
 

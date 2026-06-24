@@ -266,13 +266,13 @@ function listenTilt() {
     const dg = (e.gamma ?? 0) - S.neutralGamma;
     // Project current delta onto calibrated forward-tilt direction
     const proj = db * S.tiltDirBeta + dg * S.tiltDirGamma;
-    if (proj > 25) {
+    if (proj > 40) {
       tiltCooldown = true;
-      setTimeout(() => { tiltCooldown = false; }, 300);
+      setTimeout(() => { tiltCooldown = false; }, 1200);
       triggerCorrect();
-    } else if (proj < -25) {
+    } else if (proj < -40) {
       tiltCooldown = true;
-      setTimeout(() => { tiltCooldown = false; }, 300);
+      setTimeout(() => { tiltCooldown = false; }, 1200);
       triggerWrong();
     }
   };
@@ -298,11 +298,15 @@ async function requestSensor() {
 }
 
 // ── Calibration Wizard ─────────────────────────────────────────────────────
+const CALIB_DETECT_THRESHOLD = 25; // degrees of movement to auto-confirm a tilt step
+
 const _calib = {
   step: 0,
-  samples: [],                         // [{beta, gamma}, ...]
+  latest: { beta: 0, gamma: 0 },
   neutral: { beta: 0, gamma: 0 },
   forward: { beta: 0, gamma: 0 },
+  backward: { beta: 0, gamma: 0 },
+  forwardDir: { db: 0, dg: 1 },
   handler: null,
   timer: null,
 };
@@ -317,9 +321,8 @@ function loadCalib() {
   const stored = localStorage.getItem('tilt_calib');
   if (stored) {
     const c = JSON.parse(stored);
-    // Only load direction – neutral is always re-detected at game start
-    S.tiltDirBeta  = c.dirBeta  ?? 1;
-    S.tiltDirGamma = c.dirGamma ?? 0;
+    S.tiltDirBeta  = c.dirBeta  ?? 0;
+    S.tiltDirGamma = c.dirGamma ?? 1;
   }
 }
 
@@ -339,61 +342,78 @@ function closeCalib() {
 function _calibRunStep(step) {
   if (_calib.handler) { window.removeEventListener('deviceorientation', _calib.handler); _calib.handler = null; }
   clearTimeout(_calib.timer);
-
-  if (step >= 3) {
-    // Compute forward-tilt direction vector in beta-gamma space
-    const db = _calib.forward.beta  - _calib.neutral.beta;
-    const dg = _calib.forward.gamma - _calib.neutral.gamma;
-    const len = Math.sqrt(db * db + dg * dg);
-    // If barely any movement detected, fall back to pure-beta direction
-    const dirBeta  = len > 3 ? db / len : 1;
-    const dirGamma = len > 3 ? dg / len : 0;
-    S.tiltDirBeta  = dirBeta;
-    S.tiltDirGamma = dirGamma;
-    localStorage.setItem('tilt_calib', JSON.stringify({ dirBeta, dirGamma }));
-    hide('calib-wizard');
-    show('calib-done');
-    _calib.timer = setTimeout(closeCalib, 1500);
-    return;
-  }
-
   _calib.step = step;
-  _calib.samples = [];
+
+  if (step > 2) { _calibSave(); return; }
 
   const cfg = CALIB_STEPS_CFG[step];
   $('calib-wizard-icon').textContent = cfg.icon;
   $('calib-wizard-text').textContent = t(cfg.key);
-
   document.querySelectorAll('.calib-dot').forEach((d, i) => {
     d.classList.toggle('calib-dot-active', i === step);
   });
 
-  let seconds = 2;
-  $('calib-countdown').textContent = seconds;
+  if (step === 0) {
+    // Step 0: hold straight, then click OK
+    show('calib-step0-ui');
+    hide('calib-tilt-wrap');
+    _calib.handler = e => {
+      _calib.latest = { beta: e.beta ?? 0, gamma: e.gamma ?? 0 };
+      $('calib-live-angles').textContent = `β: ${Math.round(e.beta ?? 0)}°  γ: ${Math.round(e.gamma ?? 0)}°`;
+    };
+    window.addEventListener('deviceorientation', _calib.handler);
+  } else {
+    // Steps 1 & 2: auto-detect tilt
+    hide('calib-step0-ui');
+    show('calib-tilt-wrap');
+    $('calib-tilt-fill').style.width = '0%';
 
-  _calib.handler = e => {
-    _calib.samples.push({ beta: e.beta ?? 0, gamma: e.gamma ?? 0 });
-  };
-  window.addEventListener('deviceorientation', _calib.handler);
+    _calib.handler = e => {
+      const db = (e.beta ?? 0) - _calib.neutral.beta;
+      const dg = (e.gamma ?? 0) - _calib.neutral.gamma;
+      let proj;
+      if (step === 1) {
+        // Any direction counts as forward
+        proj = Math.sqrt(db * db + dg * dg);
+      } else {
+        // Backward = opposite of forward direction
+        proj = -(db * _calib.forwardDir.db + dg * _calib.forwardDir.dg);
+      }
+      const pct = Math.max(0, Math.min(100, (proj / CALIB_DETECT_THRESHOLD) * 100));
+      $('calib-tilt-fill').style.width = pct + '%';
 
-  const tick = () => {
-    seconds--;
-    if (seconds > 0) {
-      $('calib-countdown').textContent = seconds;
-      _calib.timer = setTimeout(tick, 1000);
-    } else {
-      $('calib-countdown').textContent = '✓';
-      const n = _calib.samples.length;
-      const avgBeta  = n > 0 ? _calib.samples.reduce((a, s) => a + s.beta,  0) / n : 0;
-      const avgGamma = n > 0 ? _calib.samples.reduce((a, s) => a + s.gamma, 0) / n : 0;
-      if (step === 0) _calib.neutral = { beta: avgBeta, gamma: avgGamma };
-      if (step === 1) _calib.forward = { beta: avgBeta, gamma: avgGamma };
-      window.removeEventListener('deviceorientation', _calib.handler);
-      _calib.handler = null;
-      _calib.timer = setTimeout(() => _calibRunStep(step + 1), 500);
-    }
-  };
-  _calib.timer = setTimeout(tick, 1000);
+      if (proj >= CALIB_DETECT_THRESHOLD) {
+        const pos = { beta: e.beta ?? 0, gamma: e.gamma ?? 0 };
+        if (step === 1) {
+          _calib.forward = pos;
+          // Compute normalised forward direction for backward detection
+          const fdb = pos.beta - _calib.neutral.beta;
+          const fdg = pos.gamma - _calib.neutral.gamma;
+          const len = Math.sqrt(fdb * fdb + fdg * fdg);
+          _calib.forwardDir = len > 0.5 ? { db: fdb / len, dg: fdg / len } : { db: 0, dg: 1 };
+        } else {
+          _calib.backward = pos;
+        }
+        _calibRunStep(step + 1);
+      }
+    };
+    window.addEventListener('deviceorientation', _calib.handler);
+  }
+}
+
+function _calibSave() {
+  // Direction from backward to forward gives the best vector
+  const db = _calib.forward.beta  - _calib.backward.beta;
+  const dg = _calib.forward.gamma - _calib.backward.gamma;
+  const len = Math.sqrt(db * db + dg * dg);
+  const dirBeta  = len > 1 ? db / len : 0;
+  const dirGamma = len > 1 ? dg / len : 1;
+  S.tiltDirBeta  = dirBeta;
+  S.tiltDirGamma = dirGamma;
+  localStorage.setItem('tilt_calib', JSON.stringify({ dirBeta, dirGamma }));
+  hide('calib-wizard');
+  show('calib-done');
+  _calib.timer = setTimeout(closeCalib, 1500);
 }
 
 // ── PWA Install ────────────────────────────────────────────────────────────
@@ -482,6 +502,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Calibration
   $('btn-open-calib').addEventListener('click', openCalib);
   $('btn-calib-cancel').addEventListener('click', closeCalib);
+  $('btn-calib-step-ok').addEventListener('click', () => {
+    if (_calib.step !== 0) return;
+    _calib.neutral = { ..._calib.latest };
+    _calibRunStep(1);
+  });
 
   // Navigation
   $('btn-to-category').addEventListener('click', showCategory);

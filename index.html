@@ -42,7 +42,15 @@
         <span class="calib-dot"></span>
         <span class="calib-dot"></span>
       </div>
-      <div class="calib-wizard-countdown" id="calib-countdown">2</div>
+      <!-- Step 0: confirm neutral position -->
+      <div id="calib-step0-ui">
+        <div id="calib-live-angles" class="calib-live-angles">β: --° γ: --°</div>
+        <button id="btn-calib-step-ok" class="btn-primary">OK</button>
+      </div>
+      <!-- Steps 1 & 2: tilt detection bar -->
+      <div id="calib-tilt-wrap" class="hidden">
+        <div class="calib-tilt-bar"><div class="calib-tilt-fill" id="calib-tilt-fill"></div></div>
+      </div>
     </div>
     <div id="calib-done" class="hidden">
       <div class="calib-wizard-icon">✅</div>
@@ -130,7 +138,7 @@
     </div>
 
   </div>
-  <span class="version-label">v1.6</span>
+  <span class="version-label">v1.7</span>
 </div>
 
 <!-- ── SCREEN: CATEGORY ────────────────────────────────────────────────── -->
