@@ -1,12 +1,12 @@
 {
-  "version": "1.9",
-  "title": "Sensor Debug & Kalibrierung vereinfacht",
-  "description": "Neues Sensor-Debug-Overlay zum Testen der Kipperkennung. Kalibrierung jetzt nur noch neutral + vorwärts kippen.",
+  "version": "2.1",
+  "title": "Kalibrierung & Orientation-Lock fixes",
+  "description": "Kalibrierung auf 2 Schritte vereinfacht, Bildschirm-Rotation gesperrt wenn im Spiel, Sensor-Debug-Overlay verbessert.",
   "changes": [
-    "Sensor-Debug-Overlay: live β/γ-Winkel, Projektionswert und Richtungsanzeige (Testen-Button)",
-    "Kalibrierung: Rückwärts-Schritt entfernt – nur neutral + vorwärts nötig",
-    "Rückwärts-Richtung wird automatisch als Umkehrung des Vorwärts-Vektors berechnet",
-    "Kipp-Schwelle 40°, Cooldown 1,2 s für weniger versehentliche Auslöser",
-    "3D-Richtungsvektor (beta+gamma-Achsen) statt nur einer Achse"
+    "Kalibrierung: nur noch neutral + vorwärts nötig (Rückwärts-Schritt entfernt)",
+    "Orientation-Lock greift jetzt beim Calib-OK-Klick und Spielstart statt beim App-Start",
+    "Toggle-Button auf dem Startscreen zum manuellen Sperren/Freigeben der Rotation",
+    "Sensor-Debug-Overlay: Neutral wird beim Öffnen automatisch erkannt (wie im Spiel)",
+    "Sensor-Debug-Overlay mit Live-β/γ, Projektionswert und Richtungsanzeige (Testen-Button)"
   ]
 }

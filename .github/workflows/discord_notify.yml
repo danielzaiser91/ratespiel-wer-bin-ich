@@ -106,12 +106,12 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           MSG_ID="${{ steps.post.outputs.msg_id }}"
-          jq --arg v "$VERSION" --arg id "$MSG_ID" '.[$v] = $id' \
-            discord/message_ids.json > /tmp/message_ids_new.json
-          mv /tmp/message_ids_new.json discord/message_ids.json
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase origin main
+          jq --arg v "$VERSION" --arg id "$MSG_ID" '.[$v] = $id' \
+            discord/message_ids.json > /tmp/message_ids_new.json
+          mv /tmp/message_ids_new.json discord/message_ids.json
           git add discord/message_ids.json
           git commit -m "chore: save Discord message ID for v${VERSION} [skip ci]"
           git push
