@@ -1,0 +1,12 @@
+{
+  "version": "1.9",
+  "title": "Sensor Debug & Kalibrierung vereinfacht",
+  "description": "Neues Sensor-Debug-Overlay zum Testen der Kipperkennung. Kalibrierung jetzt nur noch neutral + vorwärts kippen.",
+  "changes": [
+    "Sensor-Debug-Overlay: live β/γ-Winkel, Projektionswert und Richtungsanzeige (Testen-Button)",
+    "Kalibrierung: Rückwärts-Schritt entfernt – nur neutral + vorwärts nötig",
+    "Rückwärts-Richtung wird automatisch als Umkehrung des Vorwärts-Vektors berechnet",
+    "Kipp-Schwelle 40°, Cooldown 1,2 s für weniger versehentliche Auslöser",
+    "3D-Richtungsvektor (beta+gamma-Achsen) statt nur einer Achse"
+  ]
+}

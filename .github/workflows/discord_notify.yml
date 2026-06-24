@@ -1,0 +1,113 @@
+name: Discord Notification
+
+on:
+  workflow_run:
+    workflows: ["pages-build-deployment"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for deployment to propagate
+        run: sleep 120
+
+      - name: Read version info
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' discord/version.json)
+          TITLE=$(jq -r '.title' discord/version.json)
+          DESCRIPTION=$(jq -r '.description' discord/version.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+          echo "description=$DESCRIPTION" >> "$GITHUB_OUTPUT"
+
+      - name: Check for existing message ID
+        id: check
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MSG_ID=$(jq -r --arg v "$VERSION" '.[$v] // empty' discord/message_ids.json)
+          if [ -n "$MSG_ID" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "msg_id=$MSG_ID" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build message payload
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TITLE="${{ steps.version.outputs.title }}"
+          DESCRIPTION="${{ steps.version.outputs.description }}"
+          LIVE_URL="https://danielzaiser91.github.io/ratespiel-wer-bin-ich/"
+          REPO_URL="https://github.com/danielzaiser91/ratespiel-wer-bin-ich/commits/main"
+
+          H1="# 🎮 Wer bin ich? – v${VERSION} – ${TITLE}"
+          H3="### Was ist neu:"
+
+          CHANGES=$(jq -r '.changes[] | "- " + .' discord/version.json)
+
+          printf '%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n🎯 **[Jetzt spielen](%s)**  📋 **[Commits](%s)**\n' \
+            "@everyone" \
+            "$H1" \
+            "$DESCRIPTION" \
+            "$H3" \
+            "$CHANGES" \
+            "$LIVE_URL" \
+            "$REPO_URL" > /tmp/msg_text.txt
+
+          jq -n --rawfile text /tmp/msg_text.txt \
+            '{content: $text, allowed_mentions: {parse: ["everyone"]}, flags: 4}' \
+            > /tmp/payload.json
+
+          echo "--- Payload preview ---"
+          cat /tmp/payload.json
+
+      - name: POST new Discord message
+        if: steps.check.outputs.exists == 'false'
+        id: post
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d @/tmp/payload.json \
+            "${{ secrets.DISCORD_WEBHOOK_URL }}?wait=true")
+          echo "Response: $RESPONSE"
+          MSG_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+          if [ -z "$MSG_ID" ]; then
+            echo "ERROR: No message ID returned" && exit 1
+          fi
+          echo "msg_id=$MSG_ID" >> "$GITHUB_OUTPUT"
+
+      - name: PATCH existing Discord message
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          curl -s -X PATCH \
+            -H "Content-Type: application/json" \
+            -d @/tmp/payload.json \
+            "${{ secrets.DISCORD_WEBHOOK_URL }}/messages/${{ steps.check.outputs.msg_id }}"
+
+      - name: Save message ID back to repo
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MSG_ID="${{ steps.post.outputs.msg_id }}"
+          jq --arg v "$VERSION" --arg id "$MSG_ID" '.[$v] = $id' \
+            discord/message_ids.json > /tmp/message_ids_new.json
+          mv /tmp/message_ids_new.json discord/message_ids.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          git add discord/message_ids.json
+          git commit -m "chore: save Discord message ID for v${VERSION} [skip ci]"
+          git push
