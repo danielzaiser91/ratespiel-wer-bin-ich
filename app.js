@@ -416,6 +416,8 @@ window.addEventListener('beforeinstallprompt', e => {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Lock to landscape to prevent rotation even when system lock is off
+  screen.orientation?.lock?.('landscape').catch(() => {});
   // Language buttons
   document.querySelectorAll('.lang-btn').forEach(b => {
     b.addEventListener('click', () => {
@@ -498,14 +500,15 @@ document.addEventListener('DOMContentLoaded', () => {
   let _dbgHandler = null;
   $('btn-open-debug').addEventListener('click', () => {
     show('sensor-debug');
+    let dbgNeutral = null;  // auto-captured from first event (mirrors game behaviour)
     _dbgHandler = e => {
       const beta  = e.beta  ?? 0;
       const gamma = e.gamma ?? 0;
+      if (dbgNeutral === null) dbgNeutral = { beta, gamma };
       $('dbg-beta').textContent  = Math.round(beta)  + '°';
       $('dbg-gamma').textContent = Math.round(gamma) + '°';
-      // Projection using current calibration direction
-      const db = beta  - (S.neutralBeta  ?? 0);
-      const dg = gamma - (S.neutralGamma ?? 0);
+      const db = beta  - dbgNeutral.beta;
+      const dg = gamma - dbgNeutral.gamma;
       const proj = db * S.tiltDirBeta + dg * S.tiltDirGamma;
       $('dbg-proj').textContent = Math.round(proj) + '°';
       const dir = proj > 40 ? '✅ RICHTIG' : proj < -40 ? '❌ WEITER' : '↔ neutral';
