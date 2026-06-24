@@ -298,23 +298,21 @@ async function requestSensor() {
 }
 
 // ── Calibration Wizard ─────────────────────────────────────────────────────
-const CALIB_DETECT_THRESHOLD = 25; // degrees of movement to auto-confirm a tilt step
+const CALIB_DETECT_THRESHOLD = 25; // degrees of movement to auto-confirm forward tilt
 
 const _calib = {
   step: 0,
   latest: { beta: 0, gamma: 0 },
   neutral: { beta: 0, gamma: 0 },
   forward: { beta: 0, gamma: 0 },
-  backward: { beta: 0, gamma: 0 },
-  forwardDir: { db: 0, dg: 1 },
   handler: null,
   timer: null,
 };
 
+// Only 2 active steps: neutral (OK) → forward tilt (auto) → done
 const CALIB_STEPS_CFG = [
   { icon: '📱', key: 'calibStep1' },
   { icon: '✅', key: 'calibStep2' },
-  { icon: '❌', key: 'calibStep3' },
 ];
 
 function loadCalib() {
@@ -327,6 +325,10 @@ function loadCalib() {
 }
 
 function openCalib() {
+  _calib.step = 0;
+  _calib.latest = { beta: 0, gamma: 0 };
+  _calib.neutral = { beta: 0, gamma: 0 };
+  _calib.forward = { beta: 0, gamma: 0 };
   show('calib-overlay');
   show('calib-wizard');
   hide('calib-done');
@@ -344,7 +346,7 @@ function _calibRunStep(step) {
   clearTimeout(_calib.timer);
   _calib.step = step;
 
-  if (step > 2) { _calibSave(); return; }
+  if (step > 1) { _calibSave(); return; }
 
   const cfg = CALIB_STEPS_CFG[step];
   $('calib-wizard-icon').textContent = cfg.icon;
@@ -354,7 +356,7 @@ function _calibRunStep(step) {
   });
 
   if (step === 0) {
-    // Step 0: hold straight, then click OK
+    // Hold straight → click OK
     show('calib-step0-ui');
     hide('calib-tilt-wrap');
     _calib.handler = e => {
@@ -363,38 +365,18 @@ function _calibRunStep(step) {
     };
     window.addEventListener('deviceorientation', _calib.handler);
   } else {
-    // Steps 1 & 2: auto-detect tilt
+    // Tilt forward → auto-detect by magnitude from neutral
     hide('calib-step0-ui');
     show('calib-tilt-wrap');
     $('calib-tilt-fill').style.width = '0%';
-
     _calib.handler = e => {
       const db = (e.beta ?? 0) - _calib.neutral.beta;
       const dg = (e.gamma ?? 0) - _calib.neutral.gamma;
-      let proj;
-      if (step === 1) {
-        // Any direction counts as forward
-        proj = Math.sqrt(db * db + dg * dg);
-      } else {
-        // Backward = opposite of forward direction
-        proj = -(db * _calib.forwardDir.db + dg * _calib.forwardDir.dg);
-      }
-      const pct = Math.max(0, Math.min(100, (proj / CALIB_DETECT_THRESHOLD) * 100));
-      $('calib-tilt-fill').style.width = pct + '%';
-
-      if (proj >= CALIB_DETECT_THRESHOLD) {
-        const pos = { beta: e.beta ?? 0, gamma: e.gamma ?? 0 };
-        if (step === 1) {
-          _calib.forward = pos;
-          // Compute normalised forward direction for backward detection
-          const fdb = pos.beta - _calib.neutral.beta;
-          const fdg = pos.gamma - _calib.neutral.gamma;
-          const len = Math.sqrt(fdb * fdb + fdg * fdg);
-          _calib.forwardDir = len > 0.5 ? { db: fdb / len, dg: fdg / len } : { db: 0, dg: 1 };
-        } else {
-          _calib.backward = pos;
-        }
-        _calibRunStep(step + 1);
+      const mag = Math.sqrt(db * db + dg * dg);
+      $('calib-tilt-fill').style.width = Math.min(100, (mag / CALIB_DETECT_THRESHOLD) * 100) + '%';
+      if (mag >= CALIB_DETECT_THRESHOLD) {
+        _calib.forward = { beta: e.beta ?? 0, gamma: e.gamma ?? 0 };
+        _calibRunStep(2); // → _calibSave
       }
     };
     window.addEventListener('deviceorientation', _calib.handler);
@@ -402,15 +384,19 @@ function _calibRunStep(step) {
 }
 
 function _calibSave() {
-  // Direction from backward to forward gives the best vector
-  const db = _calib.forward.beta  - _calib.backward.beta;
-  const dg = _calib.forward.gamma - _calib.backward.gamma;
+  // Direction vector = normalize(forward − neutral). Backward = its inverse.
+  const db = _calib.forward.beta  - _calib.neutral.beta;
+  const dg = _calib.forward.gamma - _calib.neutral.gamma;
   const len = Math.sqrt(db * db + dg * dg);
   const dirBeta  = len > 1 ? db / len : 0;
   const dirGamma = len > 1 ? dg / len : 1;
   S.tiltDirBeta  = dirBeta;
   S.tiltDirGamma = dirGamma;
   localStorage.setItem('tilt_calib', JSON.stringify({ dirBeta, dirGamma }));
+  // Light up 3rd dot for done screen
+  document.querySelectorAll('.calib-dot').forEach((d, i) => {
+    d.classList.toggle('calib-dot-active', i === 2);
+  });
   hide('calib-wizard');
   show('calib-done');
   _calib.timer = setTimeout(closeCalib, 1500);
