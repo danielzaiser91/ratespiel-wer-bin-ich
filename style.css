@@ -200,6 +200,24 @@ html, body {
   cursor: pointer;
 }
 
+.calib-done-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg2) 92%, transparent);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+}
+
 .calib-teaser-icon {
   font-size: 1.6rem;
   flex-shrink: 0;

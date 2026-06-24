@@ -97,7 +97,7 @@
         <button class="mode-btn active" data-mode="word" data-i18n="modeWord">Wort</button>
         <button class="mode-btn" data-mode="image" data-i18n="modeImage">Bild</button>
       </div>
-      <div class="calib-teaser">
+      <div class="calib-teaser" style="position:relative">
         <div class="calib-teaser-icon">📱</div>
         <div class="calib-teaser-text">
           <strong data-i18n="calibTeaserTitle">Kipperkennung kalibrieren</strong>
@@ -106,6 +106,9 @@
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
           <button id="btn-open-calib" class="calib-teaser-btn" data-i18n="calibTeaserBtn">Kalibrieren</button>
           <button id="btn-open-debug" class="calib-teaser-btn" style="background:var(--accent2);font-size:0.65rem">Testen</button>
+        </div>
+        <div id="calib-done-overlay" class="calib-done-overlay hidden">
+          ✅ Kalibriert – antippen zum Ändern
         </div>
       </div>
 
@@ -161,7 +164,7 @@
     </div>
 
   </div>
-  <span class="version-label">v2.8</span>
+  <span class="version-label">v2.9</span>
 </div>
 
 <!-- ── SCREEN: CATEGORY ────────────────────────────────────────────────── -->

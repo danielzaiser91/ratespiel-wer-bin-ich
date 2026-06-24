@@ -663,6 +663,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   loadCalib();
+  if (localStorage.getItem('tilt_calib')) {
+    const overlay = $('calib-done-overlay');
+    overlay.classList.remove('hidden');
+    overlay.addEventListener('click', () => overlay.classList.add('hidden'), { once: true });
+  }
   showStart();
   renderAll();
 });
