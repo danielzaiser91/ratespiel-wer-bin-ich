@@ -29,6 +29,7 @@ Nie vergessen. Keine Ausnahme.
 | v2.2        | v17        | 2026-06-24 | devicemotion statt deviceorientation (kein Gimbal Lock); lockLandscape Fix |
 | v2.3        | v18        | 2026-06-24 | Zwei Startbuttons: kalibriert vs. auto (Y-Achse aus screen.orientation.angle) |
 | v2.4        | v19        | 2026-06-24 | lockLandscape: requestFullscreen() vor orientation.lock() (Browser-Tab Support) |
+| v2.5        | v20        | 2026-06-24 | Auto-Calib: X-Achse statt Y (Y=links/rechts, X=lenkrad oben/unten) |
 
 ## Projekt-Übersicht
 

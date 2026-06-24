@@ -129,12 +129,13 @@ function showCategory() {
 
 // ── Screen: Game ──────────────────────────────────────────────────────────
 function applyAutoCalib() {
-  // "Steering wheel tilt toward you" in landscape rotates around the long axis.
-  // Which Y-sign is "toward you" depends on which way the phone is rotated.
+  // "Steering wheel toward you" rotates around the short axis of the landscape phone.
+  // In device gravity coordinates this shows up on the X axis (Y was left/right).
+  // Sign depends on which landscape rotation the phone is in.
   const angle = screen.orientation?.angle ?? 90;
-  const sign = angle === 270 ? -1 : 1;
-  S.tiltDirX = 0;
-  S.tiltDirY = sign;
+  const sign = angle === 270 ? 1 : -1;
+  S.tiltDirX = sign;
+  S.tiltDirY = 0;
   S.tiltDirZ = 0;
 }
 
