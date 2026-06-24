@@ -1,4 +1,4 @@
-const CACHE = 'ratespiel-v16';
+const CACHE = 'ratespiel-v17';
 const ASSETS = ['./', './index.html', './style.css', './app.js', './i18n.js', './data.js', './manifest.json'];
 
 self.addEventListener('install', e => {

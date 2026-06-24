@@ -26,6 +26,7 @@ Nie vergessen. Keine Ausnahme.
 | v1.9        | v14        | 2026-06-24 | Sensor-Debug-Overlay: live β/γ/Projektion/Richtung zum Testen |
 | v2.0        | v15        | 2026-06-24 | Debug-Neutral auto-detect beim Öffnen; screen.orientation.lock landscape |
 | v2.1        | v16        | 2026-06-24 | Orientation-Lock erst bei Calib-OK/Spielstart; Toggle-Button auf Startscreen |
+| v2.2        | v17        | 2026-06-24 | devicemotion statt deviceorientation (kein Gimbal Lock); lockLandscape Fix |
 
 ## Projekt-Übersicht
 

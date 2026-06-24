@@ -13,10 +13,10 @@ const S = {
   timer: null,
   timeLeft: 0,
   advancing: false,
-  neutralBeta: null,  // auto-detected at game start
-  neutralGamma: null,
-  tiltDirBeta: 1,     // normalized forward-tilt direction vector
-  tiltDirGamma: 0,
+  neutralGravity: null, // {x,y,z} from accelerationIncludingGravity, auto-detected at game start
+  tiltDirX: 0,          // normalized forward-tilt direction vector in gravity space
+  tiltDirY: 1,
+  tiltDirZ: 0,
   currentImage: null,
 };
 
@@ -132,7 +132,7 @@ async function startGame() {
   S.deck = shuffle(getWords(S.category, S.lang));
   S.index = 0; S.correct = 0; S.wrong = 0;
   S.startTime = Date.now();
-  S.advancing = false; S.neutralBeta = null; S.neutralGamma = null;
+  S.advancing = false; S.neutralGravity = null;
   hideAll(); show('screen-game');
   hide('timer-display');
   renderAll();
@@ -246,52 +246,63 @@ function endGame() {
   $('sum-score').textContent = S.correct;
 }
 
-// ── DeviceOrientation ──────────────────────────────────────────────────────
+// ── DeviceMotion (gravity vector, no gimbal lock) ─────────────────────────
+// Uses accelerationIncludingGravity instead of DeviceOrientation Euler angles.
+// The gravity vector is smooth in all orientations, including flat/landscape.
+const TILT_THRESHOLD = 5; // m/s² ≈ 30° tilt from neutral
+
 let _orientHandler = null;
 
+function _grav(e) {
+  const g = e.accelerationIncludingGravity;
+  return g ? { x: g.x ?? 0, y: g.y ?? 0, z: g.z ?? 0 } : null;
+}
+
 function calibrateTilt() {
-  // Neutral angle is always auto-detected fresh at game start (direction is saved from wizard)
   const autoCalib = e => {
-    S.neutralBeta  = e.beta  ?? 0;
-    S.neutralGamma = e.gamma ?? 0;
-    window.removeEventListener('deviceorientation', autoCalib);
+    const g = _grav(e);
+    if (!g) return;
+    S.neutralGravity = g;
+    window.removeEventListener('devicemotion', autoCalib);
     listenTilt();
   };
-  window.addEventListener('deviceorientation', autoCalib);
+  window.addEventListener('devicemotion', autoCalib);
 }
 
 function listenTilt() {
   let tiltCooldown = false;
   _orientHandler = e => {
-    if (S.advancing || tiltCooldown || S.neutralBeta === null) return;
-    const db = (e.beta  ?? 0) - S.neutralBeta;
-    const dg = (e.gamma ?? 0) - S.neutralGamma;
-    // Project current delta onto calibrated forward-tilt direction
-    const proj = db * S.tiltDirBeta + dg * S.tiltDirGamma;
-    if (proj > 40) {
+    if (S.advancing || tiltCooldown || !S.neutralGravity) return;
+    const g = _grav(e);
+    if (!g) return;
+    const dx = g.x - S.neutralGravity.x;
+    const dy = g.y - S.neutralGravity.y;
+    const dz = g.z - S.neutralGravity.z;
+    const proj = dx * S.tiltDirX + dy * S.tiltDirY + dz * S.tiltDirZ;
+    if (proj > TILT_THRESHOLD) {
       tiltCooldown = true;
       setTimeout(() => { tiltCooldown = false; }, 1200);
       triggerCorrect();
-    } else if (proj < -40) {
+    } else if (proj < -TILT_THRESHOLD) {
       tiltCooldown = true;
       setTimeout(() => { tiltCooldown = false; }, 1200);
       triggerWrong();
     }
   };
-  window.addEventListener('deviceorientation', _orientHandler);
+  window.addEventListener('devicemotion', _orientHandler);
 }
 
 function removeOrientationListener() {
   if (_orientHandler) {
-    window.removeEventListener('deviceorientation', _orientHandler);
+    window.removeEventListener('devicemotion', _orientHandler);
     _orientHandler = null;
   }
 }
 
 async function requestSensor() {
-  if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+  if (typeof DeviceMotionEvent?.requestPermission === 'function') {
     try {
-      const perm = await DeviceOrientationEvent.requestPermission();
+      const perm = await DeviceMotionEvent.requestPermission();
       if (perm === 'granted') $('sensor-area').classList.add('hidden');
     } catch(e) { console.warn(e); }
   } else {
@@ -300,18 +311,17 @@ async function requestSensor() {
 }
 
 // ── Calibration Wizard ─────────────────────────────────────────────────────
-const CALIB_DETECT_THRESHOLD = 25; // degrees of movement to auto-confirm forward tilt
+const CALIB_DETECT_THRESHOLD = 3.5; // m/s² ≈ 21° tilt — enough to confirm forward tilt
 
 const _calib = {
   step: 0,
-  latest: { beta: 0, gamma: 0 },
-  neutral: { beta: 0, gamma: 0 },
-  forward: { beta: 0, gamma: 0 },
+  latest: { x: 0, y: 0, z: 0 },
+  neutral: { x: 0, y: 0, z: 0 },
+  forward: { x: 0, y: 0, z: 0 },
   handler: null,
   timer: null,
 };
 
-// Only 2 active steps: neutral (OK) → forward tilt (auto) → done
 const CALIB_STEPS_CFG = [
   { icon: '📱', key: 'calibStep1' },
   { icon: '✅', key: 'calibStep2' },
@@ -321,16 +331,17 @@ function loadCalib() {
   const stored = localStorage.getItem('tilt_calib');
   if (stored) {
     const c = JSON.parse(stored);
-    S.tiltDirBeta  = c.dirBeta  ?? 0;
-    S.tiltDirGamma = c.dirGamma ?? 1;
+    S.tiltDirX = c.dirX ?? 0;
+    S.tiltDirY = c.dirY ?? 1;
+    S.tiltDirZ = c.dirZ ?? 0;
   }
 }
 
 function openCalib() {
   _calib.step = 0;
-  _calib.latest = { beta: 0, gamma: 0 };
-  _calib.neutral = { beta: 0, gamma: 0 };
-  _calib.forward = { beta: 0, gamma: 0 };
+  _calib.latest = { x: 0, y: 0, z: 0 };
+  _calib.neutral = { x: 0, y: 0, z: 0 };
+  _calib.forward = { x: 0, y: 0, z: 0 };
   show('calib-overlay');
   show('calib-wizard');
   hide('calib-done');
@@ -339,12 +350,12 @@ function openCalib() {
 
 function closeCalib() {
   hide('calib-overlay');
-  if (_calib.handler) { window.removeEventListener('deviceorientation', _calib.handler); _calib.handler = null; }
+  if (_calib.handler) { window.removeEventListener('devicemotion', _calib.handler); _calib.handler = null; }
   clearTimeout(_calib.timer);
 }
 
 function _calibRunStep(step) {
-  if (_calib.handler) { window.removeEventListener('deviceorientation', _calib.handler); _calib.handler = null; }
+  if (_calib.handler) { window.removeEventListener('devicemotion', _calib.handler); _calib.handler = null; }
   clearTimeout(_calib.timer);
   _calib.step = step;
 
@@ -362,40 +373,46 @@ function _calibRunStep(step) {
     show('calib-step0-ui');
     hide('calib-tilt-wrap');
     _calib.handler = e => {
-      _calib.latest = { beta: e.beta ?? 0, gamma: e.gamma ?? 0 };
-      $('calib-live-angles').textContent = `β: ${Math.round(e.beta ?? 0)}°  γ: ${Math.round(e.gamma ?? 0)}°`;
+      const g = _grav(e);
+      if (!g) return;
+      _calib.latest = g;
+      const mag = Math.sqrt(g.x*g.x + g.y*g.y + g.z*g.z);
+      $('calib-live-angles').textContent = `Sensor: ${mag.toFixed(1)} m/s²`;
     };
-    window.addEventListener('deviceorientation', _calib.handler);
+    window.addEventListener('devicemotion', _calib.handler);
   } else {
     // Tilt forward → auto-detect by magnitude from neutral
     hide('calib-step0-ui');
     show('calib-tilt-wrap');
     $('calib-tilt-fill').style.width = '0%';
     _calib.handler = e => {
-      const db = (e.beta ?? 0) - _calib.neutral.beta;
-      const dg = (e.gamma ?? 0) - _calib.neutral.gamma;
-      const mag = Math.sqrt(db * db + dg * dg);
+      const g = _grav(e);
+      if (!g) return;
+      const dx = g.x - _calib.neutral.x;
+      const dy = g.y - _calib.neutral.y;
+      const dz = g.z - _calib.neutral.z;
+      const mag = Math.sqrt(dx*dx + dy*dy + dz*dz);
       $('calib-tilt-fill').style.width = Math.min(100, (mag / CALIB_DETECT_THRESHOLD) * 100) + '%';
       if (mag >= CALIB_DETECT_THRESHOLD) {
-        _calib.forward = { beta: e.beta ?? 0, gamma: e.gamma ?? 0 };
-        _calibRunStep(2); // → _calibSave
+        _calib.forward = g;
+        _calibRunStep(2);
       }
     };
-    window.addEventListener('deviceorientation', _calib.handler);
+    window.addEventListener('devicemotion', _calib.handler);
   }
 }
 
 function _calibSave() {
-  // Direction vector = normalize(forward − neutral). Backward = its inverse.
-  const db = _calib.forward.beta  - _calib.neutral.beta;
-  const dg = _calib.forward.gamma - _calib.neutral.gamma;
-  const len = Math.sqrt(db * db + dg * dg);
-  const dirBeta  = len > 1 ? db / len : 0;
-  const dirGamma = len > 1 ? dg / len : 1;
-  S.tiltDirBeta  = dirBeta;
-  S.tiltDirGamma = dirGamma;
-  localStorage.setItem('tilt_calib', JSON.stringify({ dirBeta, dirGamma }));
-  // Light up 3rd dot for done screen
+  // 3D direction vector = normalize(forward − neutral). Backward = its inverse.
+  const dx = _calib.forward.x - _calib.neutral.x;
+  const dy = _calib.forward.y - _calib.neutral.y;
+  const dz = _calib.forward.z - _calib.neutral.z;
+  const len = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  const dirX = len > 0.5 ? dx/len : 0;
+  const dirY = len > 0.5 ? dy/len : 1;
+  const dirZ = len > 0.5 ? dz/len : 0;
+  S.tiltDirX = dirX; S.tiltDirY = dirY; S.tiltDirZ = dirZ;
+  localStorage.setItem('tilt_calib', JSON.stringify({ dirX, dirY, dirZ }));
   document.querySelectorAll('.calib-dot').forEach((d, i) => {
     d.classList.toggle('calib-dot-active', i === 2);
   });
@@ -417,7 +434,7 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
-function lockLandscape()   { screen.orientation?.lock?.('landscape').catch(() => {}); }
+function lockLandscape()   { screen.orientation?.lock?.('landscape')?.catch(() => {}); }
 function unlockLandscape() { try { screen.orientation?.unlock?.(); } catch(_) {} }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -518,25 +535,27 @@ document.addEventListener('DOMContentLoaded', () => {
   let _dbgHandler = null;
   $('btn-open-debug').addEventListener('click', () => {
     show('sensor-debug');
-    let dbgNeutral = null;  // auto-captured from first event (mirrors game behaviour)
+    let dbgNeutral = null;
     _dbgHandler = e => {
-      const beta  = e.beta  ?? 0;
-      const gamma = e.gamma ?? 0;
-      if (dbgNeutral === null) dbgNeutral = { beta, gamma };
-      $('dbg-beta').textContent  = Math.round(beta)  + '°';
-      $('dbg-gamma').textContent = Math.round(gamma) + '°';
-      const db = beta  - dbgNeutral.beta;
-      const dg = gamma - dbgNeutral.gamma;
-      const proj = db * S.tiltDirBeta + dg * S.tiltDirGamma;
-      $('dbg-proj').textContent = Math.round(proj) + '°';
-      const dir = proj > 40 ? '✅ RICHTIG' : proj < -40 ? '❌ WEITER' : '↔ neutral';
+      const g = _grav(e);
+      if (!g) return;
+      if (dbgNeutral === null) dbgNeutral = { x: g.x, y: g.y, z: g.z };
+      const mag = Math.sqrt(g.x*g.x + g.y*g.y + g.z*g.z);
+      $('dbg-beta').textContent  = `x:${g.x.toFixed(1)} y:${g.y.toFixed(1)}`;
+      $('dbg-gamma').textContent = `z:${g.z.toFixed(1)}  |g|:${mag.toFixed(1)}`;
+      const dx = g.x - dbgNeutral.x;
+      const dy = g.y - dbgNeutral.y;
+      const dz = g.z - dbgNeutral.z;
+      const proj = dx * S.tiltDirX + dy * S.tiltDirY + dz * S.tiltDirZ;
+      $('dbg-proj').textContent = proj.toFixed(1) + ' m/s²';
+      const dir = proj > TILT_THRESHOLD ? '✅ RICHTIG' : proj < -TILT_THRESHOLD ? '❌ WEITER' : '↔ neutral';
       $('dbg-dir').textContent = dir;
     };
-    window.addEventListener('deviceorientation', _dbgHandler);
+    window.addEventListener('devicemotion', _dbgHandler);
   });
   $('btn-debug-close').addEventListener('click', () => {
     hide('sensor-debug');
-    if (_dbgHandler) { window.removeEventListener('deviceorientation', _dbgHandler); _dbgHandler = null; }
+    if (_dbgHandler) { window.removeEventListener('devicemotion', _dbgHandler); _dbgHandler = null; }
   });
 
   // Navigation
@@ -555,8 +574,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.code === 'Enter') { e.preventDefault(); triggerWrong(); }
   });
 
-  // iOS sensor check
-  if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+  // iOS sensor check (DeviceMotion requires explicit permission on iOS 13+)
+  if (typeof DeviceMotionEvent?.requestPermission === 'function') {
     show('sensor-area');
   }
 
