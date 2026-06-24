@@ -30,6 +30,7 @@ Nie vergessen. Keine Ausnahme.
 | v2.3        | v18        | 2026-06-24 | Zwei Startbuttons: kalibriert vs. auto (Y-Achse aus screen.orientation.angle) |
 | v2.4        | v19        | 2026-06-24 | lockLandscape: requestFullscreen() vor orientation.lock() (Browser-Tab Support) |
 | v2.5        | v20        | 2026-06-24 | Auto-Calib: X-Achse statt Y (Y=links/rechts, X=lenkrad oben/unten) |
+| v2.6        | v21        | 2026-06-24 | Kalibrierung: 600ms halten bevor Step 1 feuert (verhindert versehentliche Rückwärts-Capture) |
 
 ## Projekt-Übersicht
 

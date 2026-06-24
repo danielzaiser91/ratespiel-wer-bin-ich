@@ -394,10 +394,12 @@ function _calibRunStep(step) {
     };
     window.addEventListener('devicemotion', _calib.handler);
   } else {
-    // Tilt forward → auto-detect by magnitude from neutral
+    // Tilt forward → must hold above threshold for 600ms to avoid accidental triggers
     hide('calib-step0-ui');
     show('calib-tilt-wrap');
     $('calib-tilt-fill').style.width = '0%';
+    let holdTimer = null;
+    let holdGravity = null;
     _calib.handler = e => {
       const g = _grav(e);
       if (!g) return;
@@ -407,8 +409,14 @@ function _calibRunStep(step) {
       const mag = Math.sqrt(dx*dx + dy*dy + dz*dz);
       $('calib-tilt-fill').style.width = Math.min(100, (mag / CALIB_DETECT_THRESHOLD) * 100) + '%';
       if (mag >= CALIB_DETECT_THRESHOLD) {
-        _calib.forward = g;
-        _calibRunStep(2);
+        holdGravity = g;
+        if (!holdTimer) holdTimer = setTimeout(() => {
+          _calib.forward = holdGravity;
+          _calibRunStep(2);
+        }, 600);
+      } else {
+        clearTimeout(holdTimer);
+        holdTimer = null;
       }
     };
     window.addEventListener('devicemotion', _calib.handler);
