@@ -109,8 +109,8 @@
         </div>
       </div>
 
-      <!-- Orientation lock toggle -->
-      <button id="btn-orient-lock" class="btn-secondary" style="font-size:0.7rem;padding:4px 10px;opacity:0.7">🔒 Landscape fixieren</button>
+      <!-- Orientation lock toggle (hidden until implemented properly) -->
+      <button id="btn-orient-lock" class="btn-secondary hidden" style="font-size:0.7rem;padding:4px 10px;opacity:0.7">🔒 Landscape fixieren</button>
 
       <!-- iOS sensor -->
       <div id="sensor-area" class="hidden sensor-area">
@@ -155,14 +155,13 @@
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <button id="btn-to-category" class="btn-primary">Spielen (kalibriert)</button>
-        <button id="btn-to-category-auto" class="btn-primary" style="background:var(--accent2)">Spielen (auto)</button>
-      </div>
+      <button id="btn-to-category" class="btn-primary" data-i18n="startBtn">Starten</button>
+      <!-- Auto-start button hidden until orientation-independent detection is implemented -->
+      <button id="btn-to-category-auto" class="btn-primary hidden" style="background:var(--accent2)">Spielen (auto)</button>
     </div>
 
   </div>
-  <span class="version-label">v2.6</span>
+  <span class="version-label">v2.7</span>
 </div>
 
 <!-- ── SCREEN: CATEGORY ────────────────────────────────────────────────── -->
