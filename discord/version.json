@@ -1,12 +1,12 @@
 {
-  "version": "2.1",
-  "title": "Kalibrierung & Orientation-Lock fixes",
-  "description": "Kalibrierung auf 2 Schritte vereinfacht, Bildschirm-Rotation gesperrt wenn im Spiel, Sensor-Debug-Overlay verbessert.",
+  "version": "2.3",
+  "title": "Auto-Kalibrierung & Gimbal-Lock Fix",
+  "description": "Sensorfehler bei flacher Haltung behoben. Zwei Startmodi: manuell kalibriert oder vollautomatisch.",
   "changes": [
-    "Kalibrierung: nur noch neutral + vorwärts nötig (Rückwärts-Schritt entfernt)",
-    "Orientation-Lock greift jetzt beim Calib-OK-Klick und Spielstart statt beim App-Start",
-    "Toggle-Button auf dem Startscreen zum manuellen Sperren/Freigeben der Rotation",
-    "Sensor-Debug-Overlay: Neutral wird beim Öffnen automatisch erkannt (wie im Spiel)",
-    "Sensor-Debug-Overlay mit Live-β/γ, Projektionswert und Richtungsanzeige (Testen-Button)"
+    "Gimbal Lock behoben: wechsel von DeviceOrientation auf DeviceMotion (Gravitations-Vektor)",
+    "Neuer Startbutton 'Spielen (auto)': Richtung automatisch aus Bildschirm-Orientierung",
+    "Orientation-Lock Button auf Startscreen fixed (TypeError bei nicht-PWA Kontext)",
+    "Orientation-Lock greift erst beim Spielstart / Kalibrierungs-OK, nicht beim App-Start",
+    "Sensor-Debug-Overlay zeigt jetzt Gravitations-Vektor statt Euler-Winkel"
   ]
 }
