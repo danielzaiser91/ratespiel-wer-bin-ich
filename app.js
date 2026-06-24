@@ -17,6 +17,7 @@ const S = {
   tiltDirX: 0,          // normalized forward-tilt direction vector in gravity space
   tiltDirY: 1,
   tiltDirZ: 0,
+  autoCalib: false,     // true = axis derived from screen.orientation.angle, false = saved wizard calib
   currentImage: null,
 };
 
@@ -127,8 +128,19 @@ function showCategory() {
 }
 
 // ── Screen: Game ──────────────────────────────────────────────────────────
+function applyAutoCalib() {
+  // "Steering wheel tilt toward you" in landscape rotates around the long axis.
+  // Which Y-sign is "toward you" depends on which way the phone is rotated.
+  const angle = screen.orientation?.angle ?? 90;
+  const sign = angle === 270 ? -1 : 1;
+  S.tiltDirX = 0;
+  S.tiltDirY = sign;
+  S.tiltDirZ = 0;
+}
+
 async function startGame() {
   lockLandscape();
+  if (S.autoCalib) applyAutoCalib();
   S.deck = shuffle(getWords(S.category, S.lang));
   S.index = 0; S.correct = 0; S.wrong = 0;
   S.startTime = Date.now();
@@ -559,7 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Navigation
-  $('btn-to-category').addEventListener('click', showCategory);
+  $('btn-to-category').addEventListener('click', () => { S.autoCalib = false; showCategory(); });
+  $('btn-to-category-auto').addEventListener('click', () => { S.autoCalib = true; showCategory(); });
   $('btn-back-from-category').addEventListener('click', showStart);
   $('btn-end-game').addEventListener('click', endGame);
   $('btn-play-again').addEventListener('click', () => { S.category ? showCategory() : showStart(); });

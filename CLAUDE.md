@@ -27,6 +27,7 @@ Nie vergessen. Keine Ausnahme.
 | v2.0        | v15        | 2026-06-24 | Debug-Neutral auto-detect beim Öffnen; screen.orientation.lock landscape |
 | v2.1        | v16        | 2026-06-24 | Orientation-Lock erst bei Calib-OK/Spielstart; Toggle-Button auf Startscreen |
 | v2.2        | v17        | 2026-06-24 | devicemotion statt deviceorientation (kein Gimbal Lock); lockLandscape Fix |
+| v2.3        | v18        | 2026-06-24 | Zwei Startbuttons: kalibriert vs. auto (Y-Achse aus screen.orientation.angle) |
 
 ## Projekt-Übersicht
 
